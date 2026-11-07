@@ -38,7 +38,7 @@ class BookingFlowTest extends TestCase
 
     public function test_admin_pages_render(): void
     {
-        $this->actingAs(User::where('role', 'admin')->first());
+        $this->actingAs(User::where('role', 'owner')->first());
         $booking = Booking::first();
         foreach (['/admin', '/admin/settings', '/admin/bookings', "/admin/bookings/{$booking->id}", '/admin/products', '/admin/products/create', '/admin/products/1/edit',
             '/admin/categories', '/admin/packages', '/admin/packages/1/edit', '/admin/package-categories', '/admin/hero-slides', '/admin/users', '/admin/users/1/edit'] as $url) {
@@ -123,7 +123,7 @@ class BookingFlowTest extends TestCase
         auth()->logout();
 
         // Setelah deal di WA, admin mencatat diskon & pembayaran → booking terkonfirmasi
-        $admin = User::where('role', 'admin')->first();
+        $admin = User::where('role', 'owner')->first();
         $this->actingAs($admin)->get("/admin/bookings/{$booking->id}")->assertOk()->assertSee('Budi Tamu');
         $this->actingAs($admin)->post("/admin/bookings/{$booking->id}/payments", ['amount' => (string) $booking->dp_amount, 'method' => 'Transfer'])->assertRedirect();
 
@@ -135,7 +135,7 @@ class BookingFlowTest extends TestCase
 
     public function test_admin_payment_cannot_exceed_remaining_balance(): void
     {
-        $this->actingAs(User::where('role', 'admin')->first());
+        $this->actingAs(User::where('role', 'owner')->first());
         $booking = Booking::where('status', 'pending')->first(); // belum dibayar
         $total = $booking->total;
 
@@ -167,7 +167,7 @@ class BookingFlowTest extends TestCase
     public function test_admin_can_create_product_with_upload(): void
     {
         Storage::fake('public');
-        $this->actingAs(User::where('role', 'admin')->first());
+        $this->actingAs(User::where('role', 'owner')->first());
         $this->post('/admin/products', [
             'category_id' => 1, 'name' => 'Wireless Mic Set', 'price' => '350.000', 'unit' => 'hari', 'stock' => 5,
             'image' => UploadedFile::fake()->image('mic.jpg'), 'is_active' => 1,

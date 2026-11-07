@@ -11,9 +11,11 @@
     <div class="ml-auto flex gap-2">
         <a href="{{ route('bookings.show', $booking) }}" target="_blank" class="h-9 px-4 rounded-full bg-white border border-line text-[12px] font-semibold flex items-center gap-1.5"><i data-lucide="eye" class="w-3.5 h-3.5"></i> Tampilan customer</a>
         <a href="{{ route('bookings.invoice', $booking) }}" target="_blank" class="h-9 px-4 rounded-full bg-white border border-line text-[12px] font-semibold flex items-center gap-1.5"><i data-lucide="receipt" class="w-3.5 h-3.5"></i> Invoice</a>
+        @can('bookings.delete')
         <form action="{{ route('admin.bookings.destroy', $booking) }}" method="POST" onsubmit="return confirm('Hapus booking ini permanen?')">@csrf @method('DELETE')
             <button class="h-9 px-4 rounded-full text-red-600 bg-red-50 text-[12px] font-semibold">Hapus</button>
         </form>
+        @endcan
     </div>
 </div>
 
@@ -21,12 +23,19 @@
     <div class="space-y-5">
         <form action="{{ route('admin.bookings.update', $booking) }}" method="POST" class="bg-white border border-line rounded-2xl p-6">
             @csrf @method('PUT')
+            @php
+                $canOps = auth()->user()->can('bookings.manage');
+                $canFinance = auth()->user()->can('finance.manage');
+            @endphp
             <div class="flex items-center justify-between">
                 <h2 class="font-semibold">Detail & Status Operasional</h2>
                 <span class="text-[12px] text-muted">Customer: <b class="text-ink">{{ $booking->customer_name }}</b>{{ $booking->customer_company ? " ({$booking->customer_company})" : "" }} · {{ $booking->customer_phone }}{{ $booking->customer_email ? " · {$booking->customer_email}" : "" }}
                     <a href="https://wa.me/{{ wa_number($booking->customer_phone) }}" target="_blank" class="ml-2 text-emerald-600 font-semibold">Chat customer</a>{{ $booking->user_id ? "" : " · tamu (tanpa akun)" }}</span>
             </div>
 
+            {{-- Data operasional: hanya bisa diubah peran dengan izin bookings.manage --}}
+            <fieldset @disabled(! $canOps) class="{{ $canOps ? '' : 'opacity-60' }}">
+            @unless ($canOps)<div class="mt-4 text-[12px] text-muted flex items-center gap-1.5"><i data-lucide="lock" class="w-3.5 h-3.5"></i> Data operasional hanya bisa diubah oleh Admin Operasional / Owner.</div>@endunless
             <div class="grid sm:grid-cols-3 gap-4 mt-5">
                 <div>
                     <label class="text-[12px] font-semibold">Status booking</label>
@@ -67,15 +76,21 @@
                 <div><label class="text-[12px] font-semibold">Titik bongkar</label><input name="delivery_point" value="{{ $booking->delivery_point }}" class="{{ $cls }}" placeholder="Dock B Rear Gate"></div>
                 <div class="sm:col-span-3"><label class="text-[12px] font-semibold">Catatan crew (tampil di My Bookings)</label><input name="crew_note" value="{{ $booking->crew_note }}" class="{{ $cls }}" placeholder="Crew: Andi Prasetyo (Lead FOH), 2 Stage Hands assigned"></div>
                 <div class="sm:col-span-3"><label class="text-[12px] font-semibold">Instruksi site clearance</label><textarea name="site_instructions" rows="2" class="w-full px-3 py-2 rounded-xl border border-line text-sm mt-1">{{ $booking->site_instructions }}</textarea></div>
+                <div class="sm:col-span-3"><label class="text-[12px] font-semibold">Catatan customer</label><textarea name="notes" rows="2" class="w-full px-3 py-2 rounded-xl border border-line text-sm mt-1">{{ $booking->notes }}</textarea></div>
             </div>
+            </fieldset>
 
-            <h3 class="text-[12px] uppercase tracking-wider text-muted font-semibold mt-6">Keuangan</h3>
+            {{-- Data keuangan: hanya bisa diubah peran dengan izin finance.manage --}}
+            <fieldset @disabled(! $canFinance) class="{{ $canFinance ? '' : 'opacity-60' }}">
+            <h3 class="text-[12px] uppercase tracking-wider text-muted font-semibold mt-6 flex items-center gap-1.5">Keuangan @unless ($canFinance)<i data-lucide="lock" class="w-3.5 h-3.5"></i><span class="normal-case tracking-normal font-normal">hanya Admin Keuangan / Owner</span>@endunless</h3>
             <div class="grid sm:grid-cols-3 gap-4 mt-2">
                 <div><label class="text-[12px] font-semibold">Diskon (Rp)</label><input name="discount" value="{{ number_format($booking->discount, 0, ',', '.') }}" class="{{ $cls }}"></div>
                 <div><label class="text-[12px] font-semibold">DP (%)</label><input type="number" name="dp_percent" value="{{ $booking->dp_percent }}" class="{{ $cls }}"></div>
-                <div class="sm:col-span-3"><label class="text-[12px] font-semibold">Catatan customer</label><textarea name="notes" rows="2" class="w-full px-3 py-2 rounded-xl border border-line text-sm mt-1">{{ $booking->notes }}</textarea></div>
             </div>
+            </fieldset>
+            @if ($canOps || $canFinance)
             <button class="mt-6 h-11 px-8 rounded-full bg-ink text-white text-[13px] font-bold">Simpan Perubahan</button>
+            @endif
         </form>
 
         <div class="bg-white border border-line rounded-2xl p-6">
@@ -88,11 +103,12 @@
                             <td class="py-2"><b>{{ $it->name }}</b> <span class="text-[10px] uppercase bg-soft rounded px-1">{{ $it->item_type }}</span><div class="text-[11px] text-muted">{{ $it->description }}</div></td>
                             <td>{{ $it->qty }}</td><td>{{ $it->days }}</td>
                             <td class="text-right">{{ rupiah($it->rate) }}</td><td class="text-right font-semibold">{{ rupiah($it->subtotal) }}</td>
-                            <td class="text-right"><form action="{{ route('admin.bookings.items.destroy', $it) }}" method="POST" onsubmit="return confirm('Hapus item?')">@csrf @method('DELETE')<button class="text-red-600"><i data-lucide="trash-2" class="w-4 h-4"></i></button></form></td>
+                            <td class="text-right">@can('bookings.manage')<form action="{{ route('admin.bookings.items.destroy', $it) }}" method="POST" onsubmit="return confirm('Hapus item?')">@csrf @method('DELETE')<button class="text-red-600"><i data-lucide="trash-2" class="w-4 h-4"></i></button></form>@endcan</td>
                         </tr>
                     @endforeach
                 </tbody>
             </table>
+            @can('bookings.manage')
             <form action="{{ route('admin.bookings.items.store', $booking) }}" method="POST" class="grid grid-cols-2 sm:grid-cols-6 gap-2 mt-4 border-t border-line pt-4">@csrf
                 <input name="name" placeholder="Nama item *" required class="{{ $cls }} col-span-2">
                 <input name="description" placeholder="Keterangan" class="{{ $cls }} col-span-2">
@@ -103,6 +119,7 @@
                 <input name="rate" placeholder="Rate (Rp)" required class="{{ $cls }} col-span-2 sm:col-span-1">
                 <button class="col-span-2 h-10 mt-1 rounded-full bg-ink text-white text-[12px] font-bold">+ Tambah</button>
             </form>
+            @endcan
         </div>
     </div>
 
@@ -131,11 +148,13 @@
                             @if ($p->proof)<a href="{{ media_url($p->proof) }}" target="_blank"><img src="{{ media_url($p->proof) }}" class="w-10 h-10 rounded object-cover"></a>@endif
                             <div><b>{{ rupiah($p->amount) }}</b> · {{ $p->method }}<div class="text-[11px] text-muted">{{ $p->paid_at?->format('j M Y H:i') }} · ref {{ $p->reference ?: '-' }}</div></div>
                             <span class="ml-auto text-[10px] font-bold uppercase {{ ['verified' => 'text-emerald-600', 'pending' => 'text-amber-600', 'rejected' => 'text-red-600'][$p->status] }}">{{ $p->status }}</span>
+                            @can('finance.manage')
                             <form action="{{ route('admin.payments.destroy', $p) }}" method="POST" onsubmit="return confirm('Hapus pembayaran {{ rupiah($p->amount) }}? Jumlah dibayar akan dikurangi.')">@csrf @method('DELETE')
                                 <button class="text-red-600" title="Hapus pembayaran"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
                             </form>
+                            @endcan
                         </div>
-                        @if ($p->status === 'pending')
+                        @if ($p->status === 'pending' && $canFinance)
                             <form action="{{ route('admin.payments.verify', $p) }}" method="POST" class="flex gap-2 mt-2">@csrf
                                 <button name="action" value="verify" class="h-8 px-3 rounded-full bg-emerald-600 text-white text-[12px] font-semibold">Verifikasi</button>
                                 <button name="action" value="reject" class="h-8 px-3 rounded-full bg-red-50 text-red-600 text-[12px] font-semibold">Tolak</button>
@@ -146,7 +165,7 @@
                     <div class="text-muted text-sm py-3">Belum ada pembayaran.</div>
                 @endforelse
             </div>
-            @if ($booking->remaining > 0)
+            @if ($booking->remaining > 0 && $canFinance)
                 <form action="{{ route('admin.bookings.payments.store', $booking) }}" method="POST" class="grid grid-cols-2 gap-2 mt-3 border-t border-line pt-3">@csrf
                     <div class="col-span-2 text-[11px] text-muted">Catat pembayaran manual (langsung terverifikasi) · maks. <b>{{ rupiah($booking->remaining) }}</b></div>
                     <input name="amount" value="{{ old('amount') }}" placeholder="Nominal (Rp)" required inputmode="numeric" class="{{ $cls }}"
@@ -161,6 +180,8 @@
                     </div>
                     <button class="col-span-2 h-10 mt-1 rounded-full bg-ink text-white text-[12px] font-bold">Catat Pembayaran</button>
                 </form>
+            @elseif ($booking->remaining > 0)
+                <div class="mt-3 border-t border-line pt-3 text-[12px] text-muted flex items-center gap-1.5"><i data-lucide="lock" class="w-4 h-4"></i> Pencatatan & verifikasi pembayaran hanya untuk Admin Keuangan / Owner.</div>
             @else
                 <div class="mt-3 border-t border-line pt-3 text-[12px] text-emerald-700 font-semibold flex items-center gap-1.5"><i data-lucide="circle-check" class="w-4 h-4"></i> Booking sudah lunas.</div>
             @endif

@@ -7,6 +7,7 @@ use App\Models\Product;
 use App\Services\Cart;
 use Illuminate\Pagination\Paginator;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\View;
 use Illuminate\Support\ServiceProvider;
 
@@ -21,6 +22,13 @@ class AppServiceProvider extends ServiceProvider
     {
         Carbon::setLocale('en');
         Paginator::useTailwind();
+
+        // RBAC: setiap izin di config/rbac.php otomatis bisa dipakai lewat Gate / @can di Blade.
+        Gate::before(function ($user, string $ability) {
+            if (array_key_exists($ability, config('rbac.permissions', []))) {
+                return $user->hasPermission($ability);
+            }
+        });
 
         // Data global untuk layout publik: jumlah keranjang & item wishlist milik user.
         View::composer('layouts.app', function ($view) {

@@ -34,44 +34,59 @@ class BookingController extends Controller
 
     public function update(Request $request, Booking $booking)
     {
-        $data = $request->validate([
-            'event_name' => ['required', 'max:150'],
-            'start_date' => ['required', 'date'],
-            'end_date' => ['required', 'date', 'after_or_equal:start_date'],
-            'venue_name' => ['required', 'max:150'],
-            'venue_address' => ['nullable', 'max:255'],
-            'venue_note' => ['nullable', 'max:150'],
-            'expected_pax' => ['nullable', 'integer'],
-            'pic_name' => ['nullable', 'max:100'],
-            'pic_phone' => ['nullable', 'max:30'],
-            'delivery_point' => ['nullable', 'max:150'],
-            'status' => ['required', 'in:'.implode(',', array_keys(Booking::STATUSES))],
-            'stage' => ['required', 'integer', 'min:0', 'max:'.(count(Booking::STAGES) - 1)],
-            'phase_title' => ['nullable', 'max:150'],
-            'phase_note' => ['nullable', 'max:255'],
-            'fleet_name' => ['nullable', 'max:100'],
-            'driver_name' => ['nullable', 'max:150'],
-            'site_instructions' => ['nullable', 'max:1000'],
-            'crew_note' => ['nullable', 'max:255'],
-            'inspection_label' => ['nullable', 'max:60'],
-            'discount' => ['nullable'],
-            'dp_percent' => ['required', 'integer', 'min:0', 'max:100'],
-            'notes' => ['nullable', 'max:1000'],
-        ]);
-        $data['discount'] = (int) preg_replace('/\D/', '', (string) ($data['discount'] ?? 0));
-        $maxDiscount = $booking->subtotal + $booking->logistics_fee - $booking->amount_paid;
-        if ($data['discount'] > max(0, $maxDiscount)) {
-            return back()->withInput()->withErrors(['discount' => 'Diskon terlalu besar: total tagihan tidak boleh lebih kecil dari yang sudah dibayar ('.rupiah($booking->amount_paid).'). Diskon maksimal '.rupiah(max(0, $maxDiscount)).'.']);
+        // RBAC tingkat field: Admin Operasional hanya boleh mengubah data operasional,
+        // Admin Keuangan hanya diskon & DP. Field di luar izinnya tidak divalidasi & tidak disimpan.
+        $user = $request->user();
+        $rules = [];
+        if ($user->hasPermission('bookings.manage')) {
+            $rules += [
+                'event_name' => ['required', 'max:150'],
+                'start_date' => ['required', 'date'],
+                'end_date' => ['required', 'date', 'after_or_equal:start_date'],
+                'venue_name' => ['required', 'max:150'],
+                'venue_address' => ['nullable', 'max:255'],
+                'venue_note' => ['nullable', 'max:150'],
+                'expected_pax' => ['nullable', 'integer'],
+                'pic_name' => ['nullable', 'max:100'],
+                'pic_phone' => ['nullable', 'max:30'],
+                'delivery_point' => ['nullable', 'max:150'],
+                'status' => ['required', 'in:'.implode(',', array_keys(Booking::STATUSES))],
+                'stage' => ['required', 'integer', 'min:0', 'max:'.(count(Booking::STAGES) - 1)],
+                'phase_title' => ['nullable', 'max:150'],
+                'phase_note' => ['nullable', 'max:255'],
+                'fleet_name' => ['nullable', 'max:100'],
+                'driver_name' => ['nullable', 'max:150'],
+                'site_instructions' => ['nullable', 'max:1000'],
+                'crew_note' => ['nullable', 'max:255'],
+                'inspection_label' => ['nullable', 'max:60'],
+                'notes' => ['nullable', 'max:1000'],
+            ];
         }
-        $stage = (int) $data['stage'];
+        if ($user->hasPermission('finance.manage')) {
+            $rules += [
+                'discount' => ['nullable'],
+                'dp_percent' => ['required', 'integer', 'min:0', 'max:100'],
+            ];
+        }
+        $data = $request->validate($rules);
+
+        if (array_key_exists('discount', $data)) {
+            $data['discount'] = (int) preg_replace('/\D/', '', (string) ($data['discount'] ?? 0));
+            $maxDiscount = $booking->subtotal + $booking->logistics_fee - $booking->amount_paid;
+            if ($data['discount'] > max(0, $maxDiscount)) {
+                return back()->withInput()->withErrors(['discount' => 'Diskon terlalu besar: total tagihan tidak boleh lebih kecil dari yang sudah dibayar ('.rupiah($booking->amount_paid).'). Diskon maksimal '.rupiah(max(0, $maxDiscount)).'.']);
+            }
+        }
+
+        $stage = $data['stage'] ?? null;
         unset($data['stage']);
 
-        if ($data['status'] !== 'pending') {
+        if (isset($data['status']) && $data['status'] !== 'pending') {
             $data['hold_expires_at'] = null;
         }
         $booking->update($data);
-        if ($stage !== $booking->stage) {
-            $booking->advanceTo($stage, $data['phase_title'] ?? null);
+        if ($stage !== null && (int) $stage !== $booking->stage) {
+            $booking->advanceTo((int) $stage, $data['phase_title'] ?? null);
         }
         $booking->recalc();
 

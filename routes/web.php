@@ -48,31 +48,50 @@ Route::middleware('auth')->group(function () {
     Route::post('/wishlist/{type}/{id}', [WishlistController::class, 'toggle'])->name('wishlist.toggle');
 });
 
-// ---------- Admin ----------
+// ---------- Admin (RBAC: izin per peran ada di config/rbac.php) ----------
 Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin'])->group(function () {
     Route::get('/', [Admin\DashboardController::class, 'index'])->name('dashboard');
-    Route::get('/settings', [Admin\DashboardController::class, 'settings'])->name('settings');
-    Route::post('/settings', [Admin\DashboardController::class, 'saveSettings']);
 
-    Route::resource('categories', Admin\CategoryController::class)->except('show');
-    Route::resource('products', Admin\ProductController::class)->except('show');
-    Route::resource('package-categories', Admin\PackageCategoryController::class)->except('show');
-    Route::resource('packages', Admin\PackageController::class)->except('show');
-    Route::resource('hero-slides', Admin\HeroSlideController::class)->except('show');
-    Route::resource('users', Admin\UserController::class)->except('show');
+    // Owner saja: pengaturan (rekening bank, QRIS, kontak) & manajemen pengguna
+    Route::middleware('permission:settings.manage')->group(function () {
+        Route::get('/settings', [Admin\DashboardController::class, 'settings'])->name('settings');
+        Route::post('/settings', [Admin\DashboardController::class, 'saveSettings']);
+    });
+    Route::resource('users', Admin\UserController::class)->except('show')->middleware('permission:users.manage');
 
-    Route::post('packages/{package}/items', [Admin\PackageController::class, 'storeItem'])->name('packages.items.store');
-    Route::delete('package-items/{item}', [Admin\PackageController::class, 'destroyItem'])->name('packages.items.destroy');
-    Route::post('packages/{package}/addons', [Admin\PackageController::class, 'storeAddon'])->name('packages.addons.store');
-    Route::delete('package-addons/{addon}', [Admin\PackageController::class, 'destroyAddon'])->name('packages.addons.destroy');
+    // Katalog: Owner & Admin Operasional
+    Route::middleware('permission:catalog.manage')->group(function () {
+        Route::resource('categories', Admin\CategoryController::class)->except('show');
+        Route::resource('products', Admin\ProductController::class)->except('show');
+        Route::resource('package-categories', Admin\PackageCategoryController::class)->except('show');
+        Route::resource('packages', Admin\PackageController::class)->except('show');
+        Route::resource('hero-slides', Admin\HeroSlideController::class)->except('show');
 
-    Route::get('bookings', [Admin\BookingController::class, 'index'])->name('bookings.index');
-    Route::get('bookings/{booking}', [Admin\BookingController::class, 'show'])->name('bookings.show');
-    Route::put('bookings/{booking}', [Admin\BookingController::class, 'update'])->name('bookings.update');
-    Route::delete('bookings/{booking}', [Admin\BookingController::class, 'destroy'])->name('bookings.destroy');
-    Route::post('bookings/{booking}/items', [Admin\BookingController::class, 'storeItem'])->name('bookings.items.store');
-    Route::delete('booking-items/{item}', [Admin\BookingController::class, 'destroyItem'])->name('bookings.items.destroy');
-    Route::post('bookings/{booking}/payments', [Admin\BookingController::class, 'storePayment'])->name('bookings.payments.store');
-    Route::post('payments/{payment}/verify', [Admin\BookingController::class, 'verifyPayment'])->name('payments.verify');
-    Route::delete('payments/{payment}', [Admin\BookingController::class, 'destroyPayment'])->name('payments.destroy');
+        Route::post('packages/{package}/items', [Admin\PackageController::class, 'storeItem'])->name('packages.items.store');
+        Route::delete('package-items/{item}', [Admin\PackageController::class, 'destroyItem'])->name('packages.items.destroy');
+        Route::post('packages/{package}/addons', [Admin\PackageController::class, 'storeAddon'])->name('packages.addons.store');
+        Route::delete('package-addons/{addon}', [Admin\PackageController::class, 'destroyAddon'])->name('packages.addons.destroy');
+    });
+
+    // Booking: semua staf boleh melihat
+    Route::middleware('permission:bookings.view')->group(function () {
+        Route::get('bookings', [Admin\BookingController::class, 'index'])->name('bookings.index');
+        Route::get('bookings/{booking}', [Admin\BookingController::class, 'show'])->name('bookings.show');
+    });
+    // Ubah detail booking: Operasional (status, logistik) & Keuangan (diskon, DP) — field dibatasi di controller
+    Route::put('bookings/{booking}', [Admin\BookingController::class, 'update'])->name('bookings.update')
+        ->middleware('permission:bookings.manage|finance.manage');
+    Route::middleware('permission:bookings.manage')->group(function () {
+        Route::post('bookings/{booking}/items', [Admin\BookingController::class, 'storeItem'])->name('bookings.items.store');
+        Route::delete('booking-items/{item}', [Admin\BookingController::class, 'destroyItem'])->name('bookings.items.destroy');
+    });
+    Route::delete('bookings/{booking}', [Admin\BookingController::class, 'destroy'])->name('bookings.destroy')
+        ->middleware('permission:bookings.delete');
+
+    // Keuangan: Owner & Admin Keuangan
+    Route::middleware('permission:finance.manage')->group(function () {
+        Route::post('bookings/{booking}/payments', [Admin\BookingController::class, 'storePayment'])->name('bookings.payments.store');
+        Route::post('payments/{payment}/verify', [Admin\BookingController::class, 'verifyPayment'])->name('payments.verify');
+        Route::delete('payments/{payment}', [Admin\BookingController::class, 'destroyPayment'])->name('payments.destroy');
+    });
 });

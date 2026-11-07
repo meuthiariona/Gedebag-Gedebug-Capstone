@@ -23,9 +23,34 @@ class User extends Authenticatable
         ];
     }
 
+    /** Staf yang boleh masuk panel admin (owner, admin keuangan, admin operasional). */
     public function isAdmin(): bool
     {
-        return $this->role === 'admin';
+        return $this->hasPermission('admin.access');
+    }
+
+    public function isOwner(): bool
+    {
+        return $this->role === 'owner';
+    }
+
+    /** Cek izin berdasarkan peran, sesuai matriks di config/rbac.php. */
+    public function hasPermission(string $permission): bool
+    {
+        $granted = config("rbac.roles.{$this->role}.permissions", []);
+
+        return in_array('*', $granted, true) || in_array($permission, $granted, true);
+    }
+
+    public function roleLabel(): string
+    {
+        return config("rbac.roles.{$this->role}.label", ucfirst((string) $this->role));
+    }
+
+    /** ['owner' => 'Owner', ...] untuk dropdown form. */
+    public static function roleOptions(): array
+    {
+        return collect(config('rbac.roles'))->map(fn ($r) => $r['label'])->all();
     }
 
     public function bookings()
