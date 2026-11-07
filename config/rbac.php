@@ -27,6 +27,7 @@ return [
         'users.manage' => 'Mengelola akun pengguna & perannya',
         'settings.manage' => 'Mengubah pengaturan (rekening bank, QRIS, kontak, dll.)',
         'audit.view' => 'Melihat & mengunduh audit log (jejak aktivitas)',
+        'backup.manage' => 'Membuat, mengunduh, dan me-restore backup',
     ],
 
     // Peran => label + izin.

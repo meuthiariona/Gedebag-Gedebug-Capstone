@@ -59,6 +59,7 @@
         ['Banner Beranda', 'admin.hero-slides.index', 'image', 'admin.hero-slides.*', 'catalog.manage'],
         ['Pengguna', 'admin.users.index', 'users', 'admin.users.*', 'users.manage'],
         ['Audit Log', 'admin.activity-logs.index', 'history', 'admin.activity-logs.*', 'audit.view'],
+        ['Backup & Restore', 'admin.backups.index', 'database-backup', 'admin.backups.*', 'backup.manage'],
         ['Pengaturan', 'admin.settings', 'settings', 'admin.settings', 'settings.manage'],
     ];
 @endphp

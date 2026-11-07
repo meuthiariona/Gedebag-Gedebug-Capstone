@@ -30,6 +30,11 @@ class ActivityLog extends Model
         'login_failed' => 'Login gagal',
         'login_locked' => 'Login diblokir',
         'session_timeout' => 'Sesi habis',
+        'backup_created' => 'Backup dibuat',
+        'backup_downloaded' => 'Backup diunduh',
+        'backup_uploaded' => 'Backup di-upload',
+        'backup_restored' => 'Restore',
+        'backup_deleted' => 'Backup dihapus',
         'logout' => 'Logout',
     ];
 

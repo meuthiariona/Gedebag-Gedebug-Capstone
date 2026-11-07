@@ -63,6 +63,16 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin', 'staff.sess
     });
     Route::resource('users', Admin\UserController::class)->except('show')->middleware('permission:users.manage');
 
+    // Backup & restore: Owner saja
+    Route::middleware('permission:backup.manage')->prefix('backups')->name('backups.')->group(function () {
+        Route::get('/', [Admin\BackupController::class, 'index'])->name('index');
+        Route::post('/', [Admin\BackupController::class, 'store'])->name('store');
+        Route::post('/upload', [Admin\BackupController::class, 'upload'])->name('upload');
+        Route::get('/{name}/download', [Admin\BackupController::class, 'download'])->name('download');
+        Route::post('/{name}/restore', [Admin\BackupController::class, 'restore'])->name('restore');
+        Route::delete('/{name}', [Admin\BackupController::class, 'destroy'])->name('destroy');
+    });
+
     // Audit log: Owner saja, hanya baca
     Route::middleware('permission:audit.view')->group(function () {
         Route::get('activity-logs', [Admin\ActivityLogController::class, 'index'])->name('activity-logs.index');
