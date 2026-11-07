@@ -17,6 +17,8 @@ return Application::configure(basePath: dirname(__DIR__))
             'staff.session' => \App\Http\Middleware\EnforceStaffSession::class,
         ]);
         $middleware->redirectGuestsTo(fn () => route('login'));
+        // Header keamanan untuk semua halaman (perbaikan temuan OWASP ZAP)
+        $middleware->append(\App\Http\Middleware\SecurityHeaders::class);
     })
     ->withExceptions(function (Exceptions $exceptions) {
         //

@@ -23,3 +23,10 @@
     RewriteCond %{REQUEST_FILENAME} !-f
     RewriteRule ^ index.php [L]
 </IfModule>
+
+# Header keamanan untuk file statis (robots.txt, gambar, dll.) yang dilayani Apache langsung
+# tanpa melewati Laravel. Butuh mod_headers (aktif di XAMPP).
+<IfModule mod_headers.c>
+    Header always set X-Content-Type-Options "nosniff"
+    Header unset X-Powered-By
+</IfModule>

@@ -22,6 +22,12 @@ class BookingController extends Controller
 
     public function index(Request $request)
     {
+        // Validasi input (whitelist format) — tindak lanjut temuan ZAP pada parameter q & month.
+        $request->validate([
+            'tab' => ['nullable', 'in:upcoming,completed,cancelled'],
+            'q' => ['nullable', 'string', 'max:100'],
+            'month' => ['nullable', 'regex:/^\d{4}-(0[1-9]|1[0-2])$/'],
+        ]);
         $tab = $request->query('tab', 'upcoming');
         $search = trim((string) $request->query('q'));
         $month = $request->query('month');
