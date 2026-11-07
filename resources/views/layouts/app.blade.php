@@ -87,7 +87,7 @@
         <header class="bg-white border-b border-line h-14 px-4 sm:px-6 flex items-center gap-3 sticky top-0 z-20">
             <button class="lg:hidden" @click="side = true"><i data-lucide="menu" class="w-5 h-5"></i></button>
             <h1 class="font-semibold">@yield('title', 'Dashboard')</h1>
-            <span class="ml-auto text-[12px] text-muted">{{ auth()->user()->name }} <span class="ml-1 px-2 py-0.5 rounded-full bg-soft text-ink font-semibold">{{ auth()->user()->roleLabel() }}</span></span>
+            <span class="ml-auto text-[12px] text-muted">{{ auth()->user()->name }} <span class="ml-1 px-2 py-0.5 rounded-full bg-soft text-ink font-semibold">{{ auth()->user()->roleLabel() }}</span> <a href="{{ route('admin.password.edit') }}" class="ml-2 inline-flex items-center gap-1 hover:text-ink" title="Ganti password"><i data-lucide="key-round" class="w-3.5 h-3.5"></i></a></span>
         </header>
         <main class="p-4 sm:p-6">
             @if (session('success'))

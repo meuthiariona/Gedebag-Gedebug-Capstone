@@ -7,6 +7,7 @@
     $badge = [
         'created' => 'bg-emerald-50 text-emerald-700', 'updated' => 'bg-sky-50 text-sky-700', 'deleted' => 'bg-red-50 text-red-700',
         'login' => 'bg-soft text-ink', 'logout' => 'bg-soft text-muted', 'login_failed' => 'bg-amber-50 text-amber-700',
+        'login_locked' => 'bg-red-50 text-red-700', 'session_timeout' => 'bg-soft text-muted',
     ];
     $fmt = fn ($v) => is_array($v) ? json_encode($v, JSON_UNESCAPED_UNICODE) : (is_null($v) ? '—' : (string) $v);
 @endphp

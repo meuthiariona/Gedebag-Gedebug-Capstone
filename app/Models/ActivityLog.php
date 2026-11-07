@@ -28,6 +28,8 @@ class ActivityLog extends Model
         'deleted' => 'Hapus',
         'login' => 'Login',
         'login_failed' => 'Login gagal',
+        'login_locked' => 'Login diblokir',
+        'session_timeout' => 'Sesi habis',
         'logout' => 'Logout',
     ];
 

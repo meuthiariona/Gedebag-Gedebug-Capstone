@@ -14,6 +14,7 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->alias([
             'admin' => \App\Http\Middleware\EnsureAdmin::class,
             'permission' => \App\Http\Middleware\EnsurePermission::class,
+            'staff.session' => \App\Http\Middleware\EnforceStaffSession::class,
         ]);
         $middleware->redirectGuestsTo(fn () => route('login'));
     })

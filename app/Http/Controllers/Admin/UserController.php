@@ -43,6 +43,16 @@ class UserController extends ResourceController
         ];
     }
 
+    /** Password yang diisi Owner untuk akun lain dianggap sementara → pemilik akun wajib menggantinya saat login. */
+    protected function save(Request $request, Model $item): void
+    {
+        parent::save($request, $item);
+
+        if ($request->filled('password') && ! $item->is($request->user())) {
+            $item->forceFill(['must_change_password' => true])->save();
+        }
+    }
+
     /** Cegah sistem terkunci: Owner terakhir tidak boleh diturunkan perannya. */
     public function update(Request $request, int $id)
     {

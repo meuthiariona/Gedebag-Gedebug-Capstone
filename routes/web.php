@@ -36,7 +36,7 @@ Route::get('/my-bookings/{booking:code}/invoice', [BookingController::class, 'in
 // ---------- Auth ----------
 Route::middleware('guest')->group(function () {
     Route::get('/login', [AuthController::class, 'loginForm'])->name('login');
-    Route::post('/login', [AuthController::class, 'login']);
+    Route::post('/login', [AuthController::class, 'login'])->middleware('throttle:login-ip'); // batas per IP, lihat AppServiceProvider
     Route::get('/register', [AuthController::class, 'registerForm'])->name('register');
     Route::post('/register', [AuthController::class, 'register']);
 });
@@ -49,8 +49,12 @@ Route::middleware('auth')->group(function () {
 });
 
 // ---------- Admin (RBAC: izin per peran ada di config/rbac.php) ----------
-Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin'])->group(function () {
+Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin', 'staff.session'])->group(function () {
     Route::get('/', [Admin\DashboardController::class, 'index'])->name('dashboard');
+
+    // Ganti password (semua staf). Tetap bisa dibuka walau akun wajib ganti password.
+    Route::get('/password', [Admin\PasswordController::class, 'edit'])->name('password.edit');
+    Route::put('/password', [Admin\PasswordController::class, 'update'])->name('password.update');
 
     // Owner saja: pengaturan (rekening bank, QRIS, kontak) & manajemen pengguna
     Route::middleware('permission:settings.manage')->group(function () {
