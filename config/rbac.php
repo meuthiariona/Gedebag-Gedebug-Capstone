@@ -26,6 +26,7 @@ return [
         'catalog.manage' => 'Mengelola produk, talent, paket, kategori & banner',
         'users.manage' => 'Mengelola akun pengguna & perannya',
         'settings.manage' => 'Mengubah pengaturan (rekening bank, QRIS, kontak, dll.)',
+        'audit.view' => 'Melihat & mengunduh audit log (jejak aktivitas)',
     ],
 
     // Peran => label + izin.

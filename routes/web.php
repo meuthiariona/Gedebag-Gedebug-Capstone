@@ -59,6 +59,12 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin'])->group(fun
     });
     Route::resource('users', Admin\UserController::class)->except('show')->middleware('permission:users.manage');
 
+    // Audit log: Owner saja, hanya baca
+    Route::middleware('permission:audit.view')->group(function () {
+        Route::get('activity-logs', [Admin\ActivityLogController::class, 'index'])->name('activity-logs.index');
+        Route::get('activity-logs/export', [Admin\ActivityLogController::class, 'export'])->name('activity-logs.export');
+    });
+
     // Katalog: Owner & Admin Operasional
     Route::middleware('permission:catalog.manage')->group(function () {
         Route::resource('categories', Admin\CategoryController::class)->except('show');

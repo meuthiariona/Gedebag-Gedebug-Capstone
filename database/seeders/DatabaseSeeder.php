@@ -28,6 +28,12 @@ class DatabaseSeeder extends Seeder
 
     public function run(): void
     {
+        // Data contoh tidak perlu masuk audit trail.
+        \App\Models\ActivityLog::withoutLogging(fn () => $this->seedData());
+    }
+
+    private function seedData(): void
+    {
         // ---------- Pengaturan ----------
         foreach ([
             'site_name' => 'NEXA',

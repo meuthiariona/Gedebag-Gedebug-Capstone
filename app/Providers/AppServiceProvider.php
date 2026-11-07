@@ -7,7 +7,12 @@ use App\Models\Product;
 use App\Services\Cart;
 use Illuminate\Pagination\Paginator;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Gate;
+use App\Models\ActivityLog;
+use Illuminate\Auth\Events\Failed;
+use Illuminate\Auth\Events\Login;
+use Illuminate\Auth\Events\Logout;
 use Illuminate\Support\Facades\View;
 use Illuminate\Support\ServiceProvider;
 
@@ -29,6 +34,11 @@ class AppServiceProvider extends ServiceProvider
                 return $user->hasPermission($ability);
             }
         });
+
+        // Audit trail: catat login, login gagal & logout (berguna mendeteksi percobaan tebak password).
+        Event::listen(Login::class, fn (Login $e) => ActivityLog::record('login', 'Login berhasil: '.$e->user->email, null, null, null, $e->user));
+        Event::listen(Logout::class, fn (Logout $e) => $e->user ? ActivityLog::record('logout', 'Logout: '.$e->user->email, null, null, null, $e->user) : null);
+        Event::listen(Failed::class, fn (Failed $e) => ActivityLog::record('login_failed', 'Login gagal untuk email: '.($e->credentials['email'] ?? '-'), null, null, null, null));
 
         // Data global untuk layout publik: jumlah keranjang & item wishlist milik user.
         View::composer('layouts.app', function ($view) {

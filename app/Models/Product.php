@@ -6,6 +6,8 @@ use Illuminate\Database\Eloquent\Model;
 
 class Product extends Model
 {
+    use Concerns\Auditable; // audit trail otomatis
+
     protected $guarded = ['id'];
 
     protected $casts = ['is_active' => 'boolean'];

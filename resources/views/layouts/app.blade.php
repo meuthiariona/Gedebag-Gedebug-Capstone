@@ -58,6 +58,7 @@
         ['Kategori Paket', 'admin.package-categories.index', 'tags', 'admin.package-categories.*', 'catalog.manage'],
         ['Banner Beranda', 'admin.hero-slides.index', 'image', 'admin.hero-slides.*', 'catalog.manage'],
         ['Pengguna', 'admin.users.index', 'users', 'admin.users.*', 'users.manage'],
+        ['Audit Log', 'admin.activity-logs.index', 'history', 'admin.activity-logs.*', 'audit.view'],
         ['Pengaturan', 'admin.settings', 'settings', 'admin.settings', 'settings.manage'],
     ];
 @endphp
