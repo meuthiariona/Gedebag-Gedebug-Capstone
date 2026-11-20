@@ -5,7 +5,12 @@ set -e
 cd /var/www/html
 
 [ -f .env ] || cp .env.example .env
-[ -d vendor ] || composer install --no-interaction --prefer-dist
+composer install --no-interaction --prefer-dist --optimize-autoloader
+
+# Cache konfigurasi lama (berisi user database aplikasi) dibuang dulu,
+# supaya migrasi benar-benar memakai user gie_migrator.
+php artisan config:clear >/dev/null || true
+php artisan route:clear >/dev/null || true
 
 # Buat APP_KEY jika belum ada
 grep -q '^APP_KEY=base64:' .env || php artisan key:generate --force

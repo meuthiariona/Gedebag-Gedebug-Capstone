@@ -1,5 +1,7 @@
 # Infrastruktur GIE Entertainment — kontrol keamanan di luar kode
 
+> Mau online? Lihat **[DEPLOY.md](DEPLOY.md)** untuk deploy gratis ke Azure for Students dengan HTTPS.
+
 Folder ini menjalankan aplikasi di atas infrastruktur yang dikeraskan (*hardened*) memakai Docker.
 Kontrol di sini **melengkapi** kontrol yang sudah ada di kode Laravel (defense in depth), bukan menggantikannya.
 
