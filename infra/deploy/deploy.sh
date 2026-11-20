@@ -2,12 +2,17 @@
 # ============================================================================
 #  Deploy / update aplikasi di server.
 #
-#  Pertama kali:   bash infra/deploy/deploy.sh gie-capstone.southeastasia.cloudapp.azure.com email@kamu.com
-#  Update kode:    git pull && bash infra/deploy/deploy.sh
+#  Server online (Azure, dll.), sertifikat Let's Encrypt:
+#      bash infra/deploy/deploy.sh gie-capstone.southeastasia.cloudapp.azure.com email@kamu.com
+#  VM lokal (VMware/VirtualBox), sertifikat self-signed:
+#      bash infra/deploy/deploy.sh 192.168.xx.xx --self-signed
+#  Update kode:
+#      git pull && bash infra/deploy/deploy.sh
 #
 #  Yang dilakukan:
 #   1. Membuat infra/.env berisi password database ACAK (sekali saja)
-#   2. Meminta sertifikat HTTPS gratis dari Let's Encrypt (sekali saja)
+#   2. Meminta sertifikat HTTPS gratis dari Let's Encrypt, atau membuat sertifikat
+#      self-signed untuk VM lokal (sekali saja)
 #   3. Build & menyalakan semua container
 #   4. Migrasi database (pertama kali + data contoh), lalu hardening database
 #   5. Mengatur izin folder & cache konfigurasi Laravel
@@ -26,14 +31,18 @@ pw() { openssl rand -base64 30 | tr -dc 'A-Za-z0-9' | head -c 28; }
 if [ ! -f .env ]; then
     DOMAIN_ARG="${1:-}"; EMAIL_ARG="${2:-}"
     if [ -z "$DOMAIN_ARG" ] || [ -z "$EMAIL_ARG" ]; then
-        echo "Pemakaian pertama kali: bash infra/deploy/deploy.sh <domain> <email>"
+        echo "Pemakaian pertama kali:"
+        echo "  Server online : bash infra/deploy/deploy.sh <domain> <email>"
+        echo "  VM lokal      : bash infra/deploy/deploy.sh <ip-vm> --self-signed"
         exit 1
     fi
+    if [ "$EMAIL_ARG" = "--self-signed" ]; then CERT_MODE=self-signed; EMAIL_ARG=""; else CERT_MODE=letsencrypt; fi
     umask 077
     cat > .env <<ENV
 # Dibuat otomatis oleh deploy.sh. JANGAN di-commit. Simpan salinannya di tempat aman.
 DOMAIN=${DOMAIN_ARG}
 LETSENCRYPT_EMAIL=${EMAIL_ARG}
+CERT_MODE=${CERT_MODE}
 DB_DATABASE=gie
 MYSQL_ROOT_PASSWORD=$(pw)
 APP_DB_PASSWORD=$(pw)
@@ -49,12 +58,25 @@ set -a; . ./.env; set +a
 
 # ---------- 2. Sertifikat HTTPS ----------
 mkdir -p certbot/conf certbot/www
+CERT_MODE="${CERT_MODE:-letsencrypt}"
 if [ ! -f certbot/conf/live/gie/fullchain.pem ]; then
-    echo ">> Meminta sertifikat HTTPS untuk ${DOMAIN}"
-    "${C[@]}" stop nginx >/dev/null 2>&1 || true
-    "${C[@]}" run --rm -p 80:80 certbot certonly --standalone \
-        -d "${DOMAIN}" --cert-name gie \
-        --email "${LETSENCRYPT_EMAIL}" --agree-tos --no-eff-email -n
+    if [ "$CERT_MODE" = "self-signed" ]; then
+        # VM lokal tidak bisa dijangkau Let's Encrypt, jadi sertifikat dibuat sendiri.
+        # Browser akan memberi peringatan "Not secure"; untuk VM lokal itu wajar.
+        echo ">> Membuat sertifikat self-signed untuk ${DOMAIN}"
+        if [[ "$DOMAIN" =~ ^[0-9]+(\.[0-9]+){3}$ ]]; then SAN="IP:${DOMAIN}"; else SAN="DNS:${DOMAIN}"; fi
+        mkdir -p certbot/conf/live/gie
+        openssl req -x509 -newkey rsa:2048 -nodes -days 825 -sha256 \
+            -subj "/CN=${DOMAIN}/O=Gie Entertainment (lokal)" -addext "subjectAltName=${SAN}" \
+            -keyout certbot/conf/live/gie/privkey.pem -out certbot/conf/live/gie/fullchain.pem 2>/dev/null
+        chmod 600 certbot/conf/live/gie/privkey.pem
+    else
+        echo ">> Meminta sertifikat HTTPS untuk ${DOMAIN}"
+        "${C[@]}" stop nginx >/dev/null 2>&1 || true
+        "${C[@]}" run --rm -p 80:80 certbot certonly --standalone \
+            -d "${DOMAIN}" --cert-name gie \
+            --email "${LETSENCRYPT_EMAIL}" --agree-tos --no-eff-email -n
+    fi
 fi
 
 # ---------- 3. Container ----------
@@ -95,7 +117,7 @@ fi
 
 # ---------- 6. Perpanjangan sertifikat otomatis (setiap Senin 03:00) ----------
 CRON=/etc/cron.d/gie-certbot
-if [ ! -f "$CRON" ]; then
+if [ "$CERT_MODE" = "letsencrypt" ] && [ ! -f "$CRON" ]; then
     sudo tee "$CRON" >/dev/null <<CRONTAB
 SHELL=/bin/bash
 0 3 * * 1 root cd ${INFRA} && ${C[*]} run --rm certbot renew --webroot -w /var/www/certbot -q && ${C[*]} exec -T nginx nginx -s reload

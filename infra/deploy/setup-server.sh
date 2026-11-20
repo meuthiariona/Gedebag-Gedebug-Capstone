@@ -18,11 +18,11 @@ export DEBIAN_FRONTEND=noninteractive
 echo ">> [1/5] Update sistem"
 apt-get update -q
 apt-get upgrade -y -q
-apt-get install -y -q git curl ca-certificates openssl fail2ban unattended-upgrades
+apt-get install -y -q git curl ca-certificates openssl openssh-server fail2ban unattended-upgrades
 dpkg-reconfigure -f noninteractive unattended-upgrades   # update keamanan dipasang otomatis
 
 echo ">> [2/5] Swap 2 GB"
-if ! swapon --show | grep -q /swapfile; then
+if [ -z "$(swapon --show --noheadings)" ]; then     # lewati jika sudah ada swap (mis. bawaan installer Ubuntu)
     fallocate -l 2G /swapfile
     chmod 600 /swapfile
     mkswap /swapfile >/dev/null

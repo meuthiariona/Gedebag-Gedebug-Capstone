@@ -1,6 +1,6 @@
 # Infrastruktur GIE Entertainment — kontrol keamanan di luar kode
 
-> Mau online? Lihat **[DEPLOY.md](DEPLOY.md)** untuk deploy gratis ke Azure for Students dengan HTTPS.
+> Mau deploy? **[DEPLOY.md](DEPLOY.md)**: online gratis di Azure for Students (HTTPS resmi). **[DEPLOY-VMWARE.md](DEPLOY-VMWARE.md)**: Ubuntu Server di VMware laptop sendiri.
 
 Folder ini menjalankan aplikasi di atas infrastruktur yang dikeraskan (*hardened*) memakai Docker.
 Kontrol di sini **melengkapi** kontrol yang sudah ada di kode Laravel (defense in depth), bukan menggantikannya.
