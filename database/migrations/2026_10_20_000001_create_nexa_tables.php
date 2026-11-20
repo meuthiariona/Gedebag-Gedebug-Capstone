@@ -9,7 +9,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('users', function (Blueprint $table) {
-            $table->string('role')->default('customer')->after('password'); // customer | admin
+            $table->string('role')->default('customer')->after('password'); // customer | owner | finance | operations (lihat config/rbac.php)
             $table->string('phone')->nullable()->after('role');
             $table->string('company')->nullable()->after('phone');
             $table->string('address')->nullable()->after('company');

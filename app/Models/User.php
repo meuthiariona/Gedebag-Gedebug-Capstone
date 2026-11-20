@@ -9,7 +9,7 @@ use Illuminate\Notifications\Notifiable;
 class User extends Authenticatable
 {
     /** @use HasFactory<\Database\Factories\UserFactory> */
-    use HasFactory, Notifiable;
+    use Concerns\Auditable, HasFactory, Notifiable;
 
     protected $fillable = ['name', 'email', 'password', 'role', 'phone', 'company', 'address'];
 
@@ -20,12 +20,39 @@ class User extends Authenticatable
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
+            'must_change_password' => 'boolean',
+            'password_changed_at' => 'datetime',
         ];
     }
 
+    /** Staf yang boleh masuk panel admin (owner, admin keuangan, admin operasional). */
     public function isAdmin(): bool
     {
-        return $this->role === 'admin';
+        return $this->hasPermission('admin.access');
+    }
+
+    public function isOwner(): bool
+    {
+        return $this->role === 'owner';
+    }
+
+    /** Cek izin berdasarkan peran, sesuai matriks di config/rbac.php. */
+    public function hasPermission(string $permission): bool
+    {
+        $granted = config("rbac.roles.{$this->role}.permissions", []);
+
+        return in_array('*', $granted, true) || in_array($permission, $granted, true);
+    }
+
+    public function roleLabel(): string
+    {
+        return config("rbac.roles.{$this->role}.label", ucfirst((string) $this->role));
+    }
+
+    /** ['owner' => 'Owner', ...] untuk dropdown form. */
+    public static function roleOptions(): array
+    {
+        return collect(config('rbac.roles'))->map(fn ($r) => $r['label'])->all();
     }
 
     public function bookings()

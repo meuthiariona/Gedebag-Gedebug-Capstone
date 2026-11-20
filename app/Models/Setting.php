@@ -7,6 +7,8 @@ use Illuminate\Support\Facades\Cache;
 
 class Setting extends Model
 {
+    use Concerns\Auditable; // audit trail otomatis
+
     protected $fillable = ['key', 'value'];
 
     public static function allCached(): array

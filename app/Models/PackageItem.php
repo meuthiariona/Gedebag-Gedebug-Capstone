@@ -6,6 +6,8 @@ use Illuminate\Database\Eloquent\Model;
 
 class PackageItem extends Model
 {
+    use Concerns\Auditable; // audit trail otomatis
+
     protected $guarded = ['id'];
 
     public const TYPES = ['hardware' => 'Included Hardware', 'talent' => 'Talent & Crew', 'service' => 'Services & Logistics'];

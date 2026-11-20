@@ -49,15 +49,18 @@
 <body class="bg-soft text-ink font-sans antialiased" x-data="{ side: false }">
 @php
     $menu = [
-        ['Dashboard', 'admin.dashboard', 'layout-dashboard', 'admin.dashboard'],
-        ['Booking', 'admin.bookings.index', 'calendar-check', 'admin.bookings.*'],
-        ['Produk & Talent', 'admin.products.index', 'speaker', 'admin.products.*'],
-        ['Kategori Produk', 'admin.categories.index', 'folder', 'admin.categories.*'],
-        ['Paket Event', 'admin.packages.index', 'package', 'admin.packages.*'],
-        ['Kategori Paket', 'admin.package-categories.index', 'tags', 'admin.package-categories.*'],
-        ['Banner Beranda', 'admin.hero-slides.index', 'image', 'admin.hero-slides.*'],
-        ['Pengguna', 'admin.users.index', 'users', 'admin.users.*'],
-        ['Pengaturan', 'admin.settings', 'settings', 'admin.settings'],
+        // [label, route, ikon, pola aktif, izin yang dibutuhkan]
+        ['Dashboard', 'admin.dashboard', 'layout-dashboard', 'admin.dashboard', 'admin.access'],
+        ['Booking', 'admin.bookings.index', 'calendar-check', 'admin.bookings.*', 'bookings.view'],
+        ['Produk & Talent', 'admin.products.index', 'speaker', 'admin.products.*', 'catalog.manage'],
+        ['Kategori Produk', 'admin.categories.index', 'folder', 'admin.categories.*', 'catalog.manage'],
+        ['Paket Event', 'admin.packages.index', 'package', 'admin.packages.*', 'catalog.manage'],
+        ['Kategori Paket', 'admin.package-categories.index', 'tags', 'admin.package-categories.*', 'catalog.manage'],
+        ['Banner Beranda', 'admin.hero-slides.index', 'image', 'admin.hero-slides.*', 'catalog.manage'],
+        ['Pengguna', 'admin.users.index', 'users', 'admin.users.*', 'users.manage'],
+        ['Audit Log', 'admin.activity-logs.index', 'history', 'admin.activity-logs.*', 'audit.view'],
+        ['Backup & Restore', 'admin.backups.index', 'database-backup', 'admin.backups.*', 'backup.manage'],
+        ['Pengaturan', 'admin.settings', 'settings', 'admin.settings', 'settings.manage'],
     ];
 @endphp
 <div class="flex min-h-screen">
@@ -67,7 +70,8 @@
             <span class="font-extrabold">{{ setting('site_name', 'NEXA') }} <span class="font-normal text-white/50 text-sm">Admin</span></span>
         </div>
         <nav class="mt-6 space-y-0.5 flex-1">
-            @foreach ($menu as [$label, $route, $icon, $pattern])
+            @foreach ($menu as [$label, $route, $icon, $pattern, $permission])
+                @continue(! auth()->user()->can($permission))
                 <a href="{{ route($route) }}" class="flex items-center gap-3 px-3 py-2 rounded-lg text-[13px] {{ request()->routeIs($pattern) ? 'bg-white text-ink font-semibold' : 'text-white/75 hover:bg-white/10' }}">
                     <i data-lucide="{{ $icon }}" class="w-4 h-4"></i> {{ $label }}
                 </a>
@@ -84,7 +88,7 @@
         <header class="bg-white border-b border-line h-14 px-4 sm:px-6 flex items-center gap-3 sticky top-0 z-20">
             <button class="lg:hidden" @click="side = true"><i data-lucide="menu" class="w-5 h-5"></i></button>
             <h1 class="font-semibold">@yield('title', 'Dashboard')</h1>
-            <span class="ml-auto text-[12px] text-muted">{{ auth()->user()->name }}</span>
+            <span class="ml-auto text-[12px] text-muted">{{ auth()->user()->name }} <span class="ml-1 px-2 py-0.5 rounded-full bg-soft text-ink font-semibold">{{ auth()->user()->roleLabel() }}</span> <a href="{{ route('admin.password.edit') }}" class="ml-2 inline-flex items-center gap-1 hover:text-ink" title="Ganti password"><i data-lucide="key-round" class="w-3.5 h-3.5"></i></a></span>
         </header>
         <main class="p-4 sm:p-6">
             @if (session('success'))

@@ -23,10 +23,12 @@
                         <div class="text-[11px] text-muted">{{ $p->method }} · ref {{ $p->reference ?: '-' }} · {{ $p->created_at->diffForHumans() }}</div>
                     </div>
                     <b class="ml-auto">{{ rupiah($p->amount) }}</b>
+                    @can('finance.manage')
                     <form action="{{ route('admin.payments.verify', $p) }}" method="POST" class="flex gap-1">@csrf
                         <button name="action" value="verify" class="h-8 px-3 rounded-full bg-emerald-600 text-white text-[12px] font-semibold">Verifikasi</button>
                         <button name="action" value="reject" class="h-8 px-3 rounded-full bg-red-50 text-red-600 text-[12px] font-semibold">Tolak</button>
                     </form>
+                    @endcan
                 </div>
             @empty
                 <div class="text-muted text-sm py-4">Tidak ada pembayaran pending.</div>

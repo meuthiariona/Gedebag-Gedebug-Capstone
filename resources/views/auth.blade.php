@@ -20,7 +20,7 @@
                 <label class="text-[12px] font-semibold">Password</label>
                 <input type="password" name="password" required class="w-full h-11 px-4 rounded-xl border border-line mt-1 text-sm outline-none focus:border-ink">
             </div>
-            <label class="flex items-center gap-2 text-[12px]"><input type="checkbox" name="remember" class="accent-black"> Ingat saya</label>
+            <label class="flex items-center gap-2 text-[12px]"><input type="checkbox" name="remember" class="accent-black"> Ingat saya <span class="text-muted">(tidak berlaku untuk akun staf)</span></label>
             <button class="w-full h-11 rounded-full bg-ink text-white text-[13px] font-bold">Login</button>
         </form>
         <p class="text-[12px] text-muted text-center mt-5">Belum punya akun? <a href="{{ route('register') }}" class="font-semibold text-ink underline">Daftar</a></p>

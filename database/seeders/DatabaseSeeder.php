@@ -28,6 +28,12 @@ class DatabaseSeeder extends Seeder
 
     public function run(): void
     {
+        // Data contoh tidak perlu masuk audit trail.
+        \App\Models\ActivityLog::withoutLogging(fn () => $this->seedData());
+    }
+
+    private function seedData(): void
+    {
         // ---------- Pengaturan ----------
         foreach ([
             'site_name' => 'NEXA',
@@ -61,7 +67,12 @@ class DatabaseSeeder extends Seeder
         }
 
         // ---------- User ----------
-        User::create(['name' => 'Admin NEXA', 'email' => 'admin@nexa.test', 'password' => 'password', 'role' => 'admin', 'phone' => '+62 812-0000-0000']);
+        // Akun staf per peran (RBAC, lihat config/rbac.php)
+        User::create(['name' => 'Owner NEXA', 'email' => 'admin@nexa.test', 'password' => 'password', 'role' => 'owner', 'phone' => '+62 812-0000-0000']);
+        User::create(['name' => 'Admin Keuangan', 'email' => 'keuangan@nexa.test', 'password' => 'password', 'role' => 'finance', 'phone' => '+62 812-0000-0001']);
+        User::create(['name' => 'Admin Operasional', 'email' => 'operasional@nexa.test', 'password' => 'password', 'role' => 'operations', 'phone' => '+62 812-0000-0002']);
+        // Password bawaan staf wajib diganti saat login pertama (hardening login)
+        User::whereIn('role', ['owner', 'finance', 'operations'])->update(['must_change_password' => true]);
         $customer = User::create([
             'name' => 'Yoas Immanuel', 'email' => 'customer@example.com', 'password' => 'password', 'role' => 'customer',
             'phone' => '+62 812-3456-7890', 'company' => 'PT Digital Synergy Indonesia', 'address' => 'Jl. Gatot Subroto No. 45, Bandung, Indonesia',

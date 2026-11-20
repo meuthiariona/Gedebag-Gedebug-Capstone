@@ -11,8 +11,14 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware) {
-        $middleware->alias(['admin' => \App\Http\Middleware\EnsureAdmin::class]);
+        $middleware->alias([
+            'admin' => \App\Http\Middleware\EnsureAdmin::class,
+            'permission' => \App\Http\Middleware\EnsurePermission::class,
+            'staff.session' => \App\Http\Middleware\EnforceStaffSession::class,
+        ]);
         $middleware->redirectGuestsTo(fn () => route('login'));
+        // Header keamanan untuk semua halaman (perbaikan temuan OWASP ZAP)
+        $middleware->append(\App\Http\Middleware\SecurityHeaders::class);
     })
     ->withExceptions(function (Exceptions $exceptions) {
         //
