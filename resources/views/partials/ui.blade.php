@@ -3,11 +3,11 @@
 @case('logo')
     <a href="{{ route('home') }}" class="flex items-center gap-2 shrink-0">
         @if (setting('logo'))
-            <img src="{{ media_url(setting('logo')) }}" alt="{{ setting('site_name', 'NEXA') }}" class="h-7 w-auto">
+            <img src="{{ media_url(setting('logo')) }}" alt="{{ setting('site_name', 'GIE Entertainment') }}" class="h-7 w-auto">
         @else
             <span class="grid place-items-center w-7 h-7 rounded-md bg-ink text-white"><i data-lucide="audio-lines" class="w-4 h-4"></i></span>
         @endif
-        <span class="font-extrabold tracking-tight text-[17px]">{{ setting('site_name', 'NEXA') }}</span>
+        <span class="font-extrabold tracking-tight text-[17px]">{{ setting('site_name', 'GIE Entertainment') }}</span>
     </a>
     @break
 
@@ -15,7 +15,7 @@
     @if (setting('tech_specs_file'))
         <a href="{{ media_url(setting('tech_specs_file')) }}" target="_blank" download class="{{ $class }}"><i data-lucide="download" class="w-4 h-4"></i> Download Tech Specs</a>
     @else
-        <a href="mailto:{{ setting('support_email', 'ops@nexaevents.io') }}?subject={{ urlencode('Request Tech Specs') }}" class="{{ $class }}"><i data-lucide="download" class="w-4 h-4"></i> Download Tech Specs</a>
+        <a href="mailto:{{ setting('support_email', 'ops@google.com') }}?subject={{ urlencode('Request Tech Specs') }}" class="{{ $class }}"><i data-lucide="download" class="w-4 h-4"></i> Download Tech Specs</a>
     @endif
     @break
 

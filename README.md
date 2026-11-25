@@ -1,4 +1,4 @@
-# NEXA Event Production — Laravel 12
+# GIE Entertainment — Laravel 12
 
 Website sewa sound system, lighting, talent & paket event (sesuai mockup).
 Semua konten (produk, paket, banner, booking, pembayaran, kontak, rekening, dll.) disimpan di **database**
@@ -18,20 +18,24 @@ Buka http://127.0.0.1:8000
 
 | Akun contoh | Email | Password |
 |---|---|---|
-| Admin | admin@nexa.test | password |
-| Customer | customer@example.com | password |
+| Owner | admin@google.com | password |
+| Admin Keuangan | keuangan@google.com | password |
+| Admin Operasional | operasional@google.com | password |
+| Customer | customer@google.com | password |
+
+> Email akun contoh memakai domain `@google.com` sebagai data dummy; aplikasi tidak mengirim email ke alamat ini.
 
 > Ganti password akun admin dari menu **Admin → Pengguna** sebelum dipakai sungguhan.
 
 ### Pakai MySQL (XAMPP) alih-alih SQLite
 
-1. Nyalakan MySQL di XAMPP, buat database `nexa`.
+1. Nyalakan MySQL di XAMPP, buat database `gie`.
 2. Ubah `.env`:
    ```
    DB_CONNECTION=mysql
    DB_HOST=127.0.0.1
    DB_PORT=3306
-   DB_DATABASE=nexa
+   DB_DATABASE=gie
    DB_USERNAME=root
    DB_PASSWORD=
    ```

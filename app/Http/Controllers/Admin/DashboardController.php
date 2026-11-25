@@ -67,7 +67,7 @@ class DashboardController extends Controller
             'packages_subtitle' => ['Subjudul halaman paket', 'text'],
             'cta_title' => ['Judul banner custom setup', 'text'],
             'cta_text' => ['Teks banner custom setup', 'textarea'],
-            'sla_text' => ['Teks NEXA Hardware Guarantee', 'textarea'],
+            'sla_text' => ['Teks Hardware Guarantee', 'textarea'],
         ],
     ];
 

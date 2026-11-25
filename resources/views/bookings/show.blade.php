@@ -184,7 +184,7 @@
 
             <div class="rounded-2xl bg-ink text-white p-5 relative overflow-hidden">
                 <div class="absolute -right-10 -bottom-10 w-32 h-32 rounded-full bg-white/5"></div>
-                <h3 class="font-semibold flex items-center gap-2"><i data-lucide="shield" class="w-4 h-4"></i> {{ setting('site_name', 'NEXA') }} Hardware Guarantee</h3>
+                <h3 class="font-semibold flex items-center gap-2"><i data-lucide="shield" class="w-4 h-4"></i> {{ setting('site_name', 'GIE Entertainment') }} Hardware Guarantee</h3>
                 <div class="text-[11px] text-white/75 mt-2 whitespace-pre-line leading-relaxed">{{ setting('sla_text') }}</div>
                 <div class="flex justify-between text-[10px] text-white/60 border-t border-white/10 mt-4 pt-3"><span>Policy: {{ $booking->code }}-SLA</span></div>
             </div>

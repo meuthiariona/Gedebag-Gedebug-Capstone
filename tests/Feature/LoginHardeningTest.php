@@ -29,11 +29,11 @@ class LoginHardeningTest extends TestCase
     {
         $max = config('security.login_max_attempts');
         for ($i = 0; $i < $max; $i++) {
-            $this->post('/login', ['email' => 'admin@nexa.test', 'password' => 'salah'.$i]);
+            $this->post('/login', ['email' => 'admin@google.com', 'password' => 'salah'.$i]);
         }
 
         // Password BENAR pun ditolak selama masa blokir.
-        $this->post('/login', ['email' => 'admin@nexa.test', 'password' => 'password'])
+        $this->post('/login', ['email' => 'admin@google.com', 'password' => 'password'])
             ->assertSessionHasErrors('email');
         $this->assertGuest();
         $this->assertStringContainsString('Terlalu banyak percobaan', session('errors')->first('email'));
@@ -43,19 +43,19 @@ class LoginHardeningTest extends TestCase
     public function test_lockout_expires_after_configured_time(): void
     {
         for ($i = 0; $i < config('security.login_max_attempts'); $i++) {
-            $this->post('/login', ['email' => 'admin@nexa.test', 'password' => 'salah']);
+            $this->post('/login', ['email' => 'admin@google.com', 'password' => 'salah']);
         }
         $this->travel(config('security.login_lockout_seconds') + 1)->seconds();
 
-        $this->post('/login', ['email' => 'admin@nexa.test', 'password' => 'password']);
+        $this->post('/login', ['email' => 'admin@google.com', 'password' => 'password']);
         $this->assertAuthenticated();
     }
 
     public function test_wrong_email_and_wrong_password_give_same_message(): void
     {
-        $this->post('/login', ['email' => 'tidakada@nexa.test', 'password' => 'x']);
+        $this->post('/login', ['email' => 'tidakada@google.com', 'password' => 'x']);
         $msgUnknown = session('errors')->first('email');
-        $this->post('/login', ['email' => 'operasional@nexa.test', 'password' => 'x']);
+        $this->post('/login', ['email' => 'operasional@google.com', 'password' => 'x']);
         $msgWrong = session('errors')->first('email');
 
         $this->assertSame($msgUnknown, $msgWrong, 'Pesan error tidak boleh membocorkan email mana yang terdaftar');
@@ -72,7 +72,7 @@ class LoginHardeningTest extends TestCase
 
     public function test_staff_with_default_password_must_change_it_first(): void
     {
-        $this->post('/login', ['email' => 'admin@nexa.test', 'password' => 'password'])
+        $this->post('/login', ['email' => 'admin@google.com', 'password' => 'password'])
             ->assertRedirect(route('admin.password.edit'));
 
         // Halaman admin lain ditahan sampai password diganti.
@@ -145,11 +145,11 @@ class LoginHardeningTest extends TestCase
 
     public function test_staff_cannot_use_remember_me(): void
     {
-        $this->post('/login', ['email' => 'operasional@nexa.test', 'password' => 'password', 'remember' => 'on']);
-        $this->assertNull(User::where('email', 'operasional@nexa.test')->value('remember_token'));
+        $this->post('/login', ['email' => 'operasional@google.com', 'password' => 'password', 'remember' => 'on']);
+        $this->assertNull(User::where('email', 'operasional@google.com')->value('remember_token'));
 
         $this->post('/logout');
-        $this->post('/login', ['email' => 'customer@example.com', 'password' => 'password', 'remember' => 'on']);
-        $this->assertNotNull(User::where('email', 'customer@example.com')->value('remember_token'));
+        $this->post('/login', ['email' => 'customer@google.com', 'password' => 'password', 'remember' => 'on']);
+        $this->assertNotNull(User::where('email', 'customer@google.com')->value('remember_token'));
     }
 }

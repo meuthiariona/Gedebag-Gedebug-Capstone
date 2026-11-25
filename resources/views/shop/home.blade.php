@@ -101,7 +101,7 @@
         </div>
         <div class="md:ml-auto flex flex-wrap gap-2">
             @include('partials.ui', ['ui' => 'tech-specs', 'class' => 'h-10 px-5 rounded-full border border-line bg-white text-[12px] font-semibold flex items-center gap-2'])
-            <a href="https://wa.me/{{ setting('whatsapp', '6281234567890') }}?text={{ urlencode('Halo, saya ingin konsultasi dengan Sound Director NEXA.') }}" target="_blank" class="h-10 px-5 rounded-full bg-ink text-white text-[12px] font-bold flex items-center gap-2">Speak with Sound Director</a>
+            <a href="https://wa.me/{{ setting('whatsapp', '6281234567890') }}?text={{ urlencode('Halo, saya ingin konsultasi dengan Sound Director GIE Entertainment.') }}" target="_blank" class="h-10 px-5 rounded-full bg-ink text-white text-[12px] font-bold flex items-center gap-2">Speak with Sound Director</a>
         </div>
     </section>
 </div>

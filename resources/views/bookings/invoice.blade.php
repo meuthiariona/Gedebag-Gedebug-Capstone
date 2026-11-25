@@ -108,7 +108,7 @@
                 </div>
                 <div class="flex items-center gap-3 text-[11px] px-2">
                     <span class="grid place-items-center w-10 h-10 rounded-full bg-soft"><i data-lucide="shield-check" class="w-4 h-4"></i></span>
-                    <div><div class="font-semibold">{{ setting('site_name', 'NEXA') }} Central Billing &amp; Logistics Control</div><div class="text-muted">Digitally authorized on {{ $booking->created_at->format('j M Y, H:i') }} WIB</div></div>
+                    <div><div class="font-semibold">{{ setting('site_name', 'GIE Entertainment') }} Central Billing &amp; Logistics Control</div><div class="text-muted">Digitally authorized on {{ $booking->created_at->format('j M Y, H:i') }} WIB</div></div>
                 </div>
             </div>
             <div class="bg-soft rounded-xl p-4 text-[12px]">

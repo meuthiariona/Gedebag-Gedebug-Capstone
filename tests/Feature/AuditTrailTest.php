@@ -87,10 +87,10 @@ class AuditTrailTest extends TestCase
 
     public function test_failed_and_successful_logins_are_logged(): void
     {
-        $this->post('/login', ['email' => 'admin@nexa.test', 'password' => 'salah']);
-        $this->post('/login', ['email' => 'admin@nexa.test', 'password' => 'password']);
+        $this->post('/login', ['email' => 'admin@google.com', 'password' => 'salah']);
+        $this->post('/login', ['email' => 'admin@google.com', 'password' => 'password']);
 
-        $this->assertDatabaseHas('activity_logs', ['action' => 'login_failed', 'description' => 'Login gagal untuk email: admin@nexa.test']);
+        $this->assertDatabaseHas('activity_logs', ['action' => 'login_failed', 'description' => 'Login gagal untuk email: admin@google.com']);
         $this->assertDatabaseHas('activity_logs', ['action' => 'login', 'user_id' => $this->role('owner')->id]);
     }
 

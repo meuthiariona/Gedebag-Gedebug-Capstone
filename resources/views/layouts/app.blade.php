@@ -7,9 +7,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     @if ($isAdmin)
-        <title>@yield('title', 'Dashboard') · Admin {{ setting('site_name', 'NEXA') }}</title>
+        <title>@yield('title', 'Dashboard') · Admin {{ setting('site_name', 'GIE Entertainment') }}</title>
     @else
-        <title>@yield('title', 'Home') · {{ setting('site_name', 'NEXA') }} Event Production</title>
+        <title>@yield('title', 'Home') · {{ setting('site_name', 'GIE Entertainment') }}</title>
     @endif
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -67,7 +67,7 @@
     <aside :class="side ? 'translate-x-0' : '-translate-x-full'" class="fixed lg:sticky top-0 z-40 h-screen w-60 bg-ink text-white p-4 flex flex-col transition lg:translate-x-0">
         <div class="flex items-center gap-2 px-2 py-2">
             <span class="grid place-items-center w-7 h-7 rounded-md bg-white text-ink"><i data-lucide="audio-lines" class="w-4 h-4"></i></span>
-            <span class="font-extrabold">{{ setting('site_name', 'NEXA') }} <span class="font-normal text-white/50 text-sm">Admin</span></span>
+            <span class="font-extrabold">{{ setting('site_name', 'GIE Entertainment') }} <span class="font-normal text-white/50 text-sm">Admin</span></span>
         </div>
         <nav class="mt-6 space-y-0.5 flex-1">
             @foreach ($menu as [$label, $route, $icon, $pattern, $permission])
@@ -266,13 +266,13 @@
                     <div class="eyebrow mb-3">Direct Support</div>
                     <ul class="space-y-1.5 text-[12px]">
                         <li class="text-muted">{{ setting('support_region', 'Jakarta & Bali Regional Dispatch') }}</li>
-                        <li><a href="mailto:{{ setting('support_email', 'ops@nexaevents.io') }}" class="font-semibold">{{ setting('support_email', 'ops@nexaevents.io') }}</a></li>
+                        <li><a href="mailto:{{ setting('support_email', 'ops@google.com') }}" class="font-semibold">{{ setting('support_email', 'ops@google.com') }}</a></li>
                         <li class="font-semibold">{{ setting('support_phone', '+62 (21) 5092-8812') }}</li>
                     </ul>
                 </div>
             </div>
             <div class="flex flex-wrap justify-between gap-4 text-[11px] text-muted mt-14">
-                <span>© {{ date('Y') }} {{ setting('company_name', 'NEXA Live Production & Equipment Ltd.') }} All rights reserved.</span>
+                <span>© {{ date('Y') }} {{ setting('company_name', 'PT GIE Entertainment') }} All rights reserved.</span>
                 <div class="flex gap-5"><span>Terms of Rental</span><span>Privacy Statement</span><span>Safety Certifications</span></div>
             </div>
         </div>

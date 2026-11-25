@@ -36,12 +36,12 @@ class DatabaseSeeder extends Seeder
     {
         // ---------- Pengaturan ----------
         foreach ([
-            'site_name' => 'NEXA',
-            'company_name' => 'PT NEXA Live Production & Equipment Ltd.',
+            'site_name' => 'GIE Entertainment',
+            'company_name' => 'PT GIE Entertainment',
             'tagline' => 'Industrial-grade event hardware, live stage production, and premier entertainment bookings on single frictionless rails.',
             'npwp' => '01.345.678.9-428.000',
             'company_address' => "Jl. Ir. H. Juanda No. 128, Dago\nBandung, Jawa Barat 40132, Indonesia",
-            'support_email' => 'ops@nexaevents.io',
+            'support_email' => 'ops@google.com',
             'support_phone' => '+62 (21) 5092-8812',
             'whatsapp' => '6282198838172',
             'support_region' => 'Jakarta & Bali Regional Dispatch',
@@ -53,8 +53,8 @@ class DatabaseSeeder extends Seeder
             'hold_hours' => 48,
             'bank_name' => 'BCA',
             'bank_account' => '8271-0812-3456-7890',
-            'bank_holder' => 'PT NEXA Live Production',
-            'invoice_terms' => 'All audio, stage illumination, and power distribution hardware supplied by NEXA Live Production are backed by regional equipment liability coverage and certified under SNI / ISO 9001:2015 production rig safety standards. Technical soundchecks must be conducted jointly between client technical staff and NEXA audio engineers prior to public hall admittance.',
+            'bank_holder' => 'PT GIE Entertainment',
+            'invoice_terms' => 'All audio, stage illumination, and power distribution hardware supplied by GIE Entertainment are backed by regional equipment liability coverage and certified under SNI / ISO 9001:2015 production rig safety standards. Technical soundchecks must be conducted jointly between client technical staff and GIE Entertainment audio engineers prior to public hall admittance.',
             'certified_title' => 'Certified Sound & Lighting Technicians Included',
             'certified_text' => 'Every rental tier includes full transport logistics, rig check, and live audio engineer standby.',
             'packages_title' => 'Event Packages',
@@ -68,13 +68,13 @@ class DatabaseSeeder extends Seeder
 
         // ---------- User ----------
         // Akun staf per peran (RBAC, lihat config/rbac.php)
-        User::create(['name' => 'Owner NEXA', 'email' => 'admin@nexa.test', 'password' => 'password', 'role' => 'owner', 'phone' => '+62 812-0000-0000']);
-        User::create(['name' => 'Admin Keuangan', 'email' => 'keuangan@nexa.test', 'password' => 'password', 'role' => 'finance', 'phone' => '+62 812-0000-0001']);
-        User::create(['name' => 'Admin Operasional', 'email' => 'operasional@nexa.test', 'password' => 'password', 'role' => 'operations', 'phone' => '+62 812-0000-0002']);
+        User::create(['name' => 'Owner GIE', 'email' => 'admin@google.com', 'password' => 'password', 'role' => 'owner', 'phone' => '+62 812-0000-0000']);
+        User::create(['name' => 'Admin Keuangan', 'email' => 'keuangan@google.com', 'password' => 'password', 'role' => 'finance', 'phone' => '+62 812-0000-0001']);
+        User::create(['name' => 'Admin Operasional', 'email' => 'operasional@google.com', 'password' => 'password', 'role' => 'operations', 'phone' => '+62 812-0000-0002']);
         // Password bawaan staf wajib diganti saat login pertama (hardening login)
         User::whereIn('role', ['owner', 'finance', 'operations'])->update(['must_change_password' => true]);
         $customer = User::create([
-            'name' => 'Yoas Immanuel', 'email' => 'customer@example.com', 'password' => 'password', 'role' => 'customer',
+            'name' => 'Yoas Immanuel', 'email' => 'customer@google.com', 'password' => 'password', 'role' => 'customer',
             'phone' => '+62 812-3456-7890', 'company' => 'PT Digital Synergy Indonesia', 'address' => 'Jl. Gatot Subroto No. 45, Bandung, Indonesia',
         ]);
 
@@ -147,7 +147,7 @@ class DatabaseSeeder extends Seeder
             [
                 'cat' => 'Corporate', 'name' => 'Corporate Event Package', 'badge' => 'Corporate & Conference', 'price' => 8000000, 'stock' => 3,
                 'summary' => 'Sound System (Top + Sub) • Stage Lighting (8 PAR, 4 Moving) • 1 Bilingual MC • Wireless Mics',
-                'description' => 'Comprehensive industrial-grade sound, architectural ambient lighting, and certified bilingual host tailored for executive conferences, seminars, annual general meetings, and corporate galas. Fully rigged and calibrated by NEXA on-site audio engineers.',
+                'description' => 'Comprehensive industrial-grade sound, architectural ambient lighting, and certified bilingual host tailored for executive conferences, seminars, annual general meetings, and corporate galas. Fully rigged and calibrated by GIE Entertainment on-site audio engineers.',
                 'series_label' => 'Tier 2 Executive Series', 'tier' => 'Tier 2', 'tags' => ['Best Seller', 'Turnkey Solution', 'All-in-One'],
                 'cap' => [250, 600], 'watts' => 12000, 'img' => '1587825140708-dfaf72ae4b04', 'featured' => true,
                 'gallery' => ['1540575467063-178a50c2df87', '1561489396-888724a1543d', '1505373877841-8d25f7d46678'],

@@ -58,7 +58,7 @@
         </div>
         <div class="relative lg:ml-auto flex flex-wrap gap-3">
             @include('partials.ui', ['ui' => 'tech-specs', 'class' => 'h-11 px-6 rounded-full bg-white text-ink text-[12px] font-bold flex items-center gap-2'])
-            <a href="https://wa.me/{{ setting('whatsapp', '6281234567890') }}?text={{ urlencode('Halo NEXA, saya butuh custom turnkey setup.') }}" target="_blank" class="h-11 px-6 rounded-full bg-white/15 hover:bg-white/25 text-[12px] font-bold flex items-center gap-2"><i data-lucide="message-square" class="w-4 h-4"></i> Contact Ops</a>
+            <a href="https://wa.me/{{ setting('whatsapp', '6281234567890') }}?text={{ urlencode('Halo GIE Entertainment, saya butuh custom turnkey setup.') }}" target="_blank" class="h-11 px-6 rounded-full bg-white/15 hover:bg-white/25 text-[12px] font-bold flex items-center gap-2"><i data-lucide="message-square" class="w-4 h-4"></i> Contact Ops</a>
         </div>
     </div>
 </div>

@@ -117,7 +117,7 @@ class RbacTest extends TestCase
             ->assertSessionHasErrors('role');
         $this->assertSame('owner', $owner->fresh()->role);
 
-        $other = User::create(['name' => 'Owner 2', 'email' => 'o2@nexa.test', 'password' => 'password', 'role' => 'owner']);
+        $other = User::create(['name' => 'Owner 2', 'email' => 'o2@google.com', 'password' => 'password', 'role' => 'owner']);
         $this->actingAs($other)->delete("/admin/users/{$other->id}")->assertSessionHasErrors('user');
     }
 }

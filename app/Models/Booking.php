@@ -198,7 +198,7 @@ class Booking extends Model
     {
         $items = $this->items()->get();
         $lines = [
-            'Halo '.setting('site_name', 'NEXA').', saya ingin memesan dan negosiasi harga untuk pesanan berikut:',
+            'Halo '.setting('site_name', 'GIE Entertainment').', saya ingin memesan dan negosiasi harga untuk pesanan berikut:',
             '',
             '*Kode Pesanan:* '.$this->code,
             '',
