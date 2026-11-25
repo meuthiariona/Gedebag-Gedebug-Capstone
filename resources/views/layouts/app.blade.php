@@ -189,30 +189,6 @@
                 </div>
             </div>
         </div>
-    @else
-        @php [$rs, $re] = rental_dates(); @endphp
-        <div class="bg-soft/70 border-b border-line no-print">
-            <form action="{{ route('availability') }}" method="POST" class="max-w-[1180px] mx-auto px-4 sm:px-6 py-2.5 flex flex-wrap items-center gap-3">
-                @csrf
-                <div class="flex items-center gap-2 text-[11px]">
-                    <i data-lucide="calendar-days" class="w-4 h-4"></i>
-                    <span class="font-bold tracking-[.08em] uppercase">Event Availability Engine</span>
-                    <span class="hidden sm:inline text-muted">• Real-time equipment dispatch &amp; logistics check</span>
-                </div>
-                <div class="ml-auto flex flex-wrap items-center gap-2">
-                    <div class="flex items-center bg-white border border-line rounded-full px-3 h-9 text-[11px] gap-2">
-                        <label class="font-semibold uppercase tracking-wider text-muted">Start:</label>
-                        <input type="date" name="start" value="{{ $rs->toDateString() }}" min="{{ today()->toDateString() }}" class="font-semibold outline-none bg-transparent">
-                        <i data-lucide="arrow-right" class="w-3.5 h-3.5 text-muted"></i>
-                        <label class="font-semibold uppercase tracking-wider text-muted">End:</label>
-                        <input type="date" name="end" value="{{ $re->toDateString() }}" min="{{ today()->toDateString() }}" class="font-semibold outline-none bg-transparent">
-                    </div>
-                    <button class="h-9 px-4 rounded-full bg-ink text-white text-[12px] font-bold flex items-center gap-2">
-                        Check Availability <i data-lucide="sliders-horizontal" class="w-3.5 h-3.5"></i>
-                    </button>
-                </div>
-            </form>
-        </div>
     @endif
 
     {{-- ===== FLASH MESSAGE ===== --}}
@@ -265,7 +241,7 @@
                 <div>
                     <div class="eyebrow mb-3">Direct Support</div>
                     <ul class="space-y-1.5 text-[12px]">
-                        <li class="text-muted">{{ setting('support_region', 'Jakarta & Bali Regional Dispatch') }}</li>
+                        <li class="text-muted">{{ setting('support_region', 'Bandung, Jawa Barat') }}</li>
                         <li><a href="mailto:{{ setting('support_email', 'ops@google.com') }}" class="font-semibold">{{ setting('support_email', 'ops@google.com') }}</a></li>
                         <li class="font-semibold">{{ setting('support_phone', '+62 (21) 5092-8812') }}</li>
                     </ul>

@@ -2,11 +2,10 @@
 @section('title', 'Cart')
 
 @section('content')
-@php([$rs, $re, $days] = rental_dates())
 <div class="max-w-[1180px] mx-auto px-4 sm:px-6 pt-10">
     <div class="eyebrow flex items-center gap-2"><span class="w-1.5 h-1.5 rounded-full bg-ink"></span> Rental Cart</div>
     <h1 class="text-3xl font-semibold tracking-tight mt-2">Keranjang Sewa</h1>
-    <p class="text-[13px] text-muted mt-1">Periode sewa: <b class="text-ink">{{ $rs->format('j M Y') }} – {{ $re->format('j M Y') }}</b> ({{ $days }} hari). Ubah tanggal lewat bar di atas.</p>
+    <p class="text-[13px] text-muted mt-1">Tanggal acara diisi di halaman checkout. Harga sewa harian di sini dihitung untuk 1 hari dan menyesuaikan lama sewa saat checkout.</p>
 
     @if (! $lines)
         <div class="text-center py-20 border border-dashed border-line rounded-2xl mt-8">
@@ -31,12 +30,12 @@
                                 <div class="text-[11px] mt-0.5">+ {{ $addon->name }} <span class="text-muted">({{ rupiah($addon->price) }})</span></div>
                             @endforeach
                             <div class="text-[11px] mt-1 {{ $line['qty'] > $line['available'] ? 'text-red-600 font-semibold' : 'text-emerald-600' }}">
-                                {{ $line['qty'] > $line['available'] ? 'Stok tidak cukup — tersedia '.$line['available'] : $line['available'].' unit tersedia untuk tanggal ini' }}
+                                {{ $line['qty'] > $line['available'] ? 'Stok tidak cukup — maksimal '.$line['available'] : 'Stok tersedia · jadwal dicek saat checkout' }}
                             </div>
                         </div>
                         <div class="text-right shrink-0">
                             <div class="font-bold text-[14px]">{{ rupiah($line['subtotal']) }}</div>
-                            <div class="text-[10.5px] text-muted">{{ rupiah($line['rate']) }} /{{ $line['unit'] }}{{ $line['days'] > 1 ? ' × '.$line['days'].' hari' : '' }}</div>
+                            <div class="text-[10.5px] text-muted">{{ rupiah($line['rate']) }} /{{ $line['unit'] }}</div>
                             <div class="flex items-center justify-end gap-2 mt-2">
                                 <form action="{{ route('cart.update', $line['key']) }}" method="POST" class="flex items-center border border-line rounded-full">@csrf @method('PATCH')
                                     <button name="qty" value="{{ $line['qty'] - 1 }}" class="w-7 h-7 grid place-items-center"><i data-lucide="minus" class="w-3 h-3"></i></button>
@@ -60,7 +59,7 @@
                     <div class="flex justify-between"><span class="text-muted">Sound & light engineers</span><span class="text-emerald-600 font-bold text-[10.5px]">INCLUDED</span></div>
                 </div>
                 <div class="flex justify-between items-end border-t border-line mt-4 pt-4">
-                    <span class="font-semibold">Grand Total</span><span class="text-xl font-bold">{{ rupiah($totals['total']) }}</span>
+                    <span class="font-semibold">Estimasi Total</span><span class="text-xl font-bold">{{ rupiah($totals['total']) }}</span>
                 </div>
                 <div class="text-[11px] text-muted mt-1">DP {{ setting('dp_percent', 50) }}%: <b class="text-ink">{{ rupiah(round($totals['total'] * setting('dp_percent', 50) / 100)) }}</b></div>
                 <a href="{{ route('checkout') }}" class="mt-5 w-full h-11 rounded-full bg-ink text-white text-[13px] font-bold flex items-center justify-center gap-2">Lanjut Checkout <i data-lucide="arrow-right" class="w-4 h-4"></i></a>

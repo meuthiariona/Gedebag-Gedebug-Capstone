@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\Package;
 use App\Models\Product;
+use Illuminate\Support\Carbon;
 
 /** Keranjang berbasis session. Harga selalu dihitung ulang dari database. */
 class Cart
@@ -53,10 +54,16 @@ class Cart
         session()->forget('cart');
     }
 
-    /** Baris keranjang lengkap dengan model, harga & ketersediaan. */
-    public static function lines(): array
+    /**
+     * Baris keranjang lengkap dengan model, harga & ketersediaan.
+     *
+     * Tanpa tanggal (halaman keranjang): item harian dihitung 1 hari dan ketersediaan = total stok.
+     * Dengan tanggal (checkout): harga mengikuti jumlah hari & stok dicek terhadap booking lain di rentang itu.
+     */
+    public static function lines(?Carbon $start = null, ?Carbon $end = null): array
     {
-        [$start, $end, $days] = rental_dates();
+        $dated = $start && $end;
+        $days = $dated ? (int) $start->diffInDays($end) + 1 : 1;
         $lines = [];
 
         foreach (self::raw() as $key => $row) {
@@ -71,7 +78,7 @@ class Cart
                     'name' => $model->name, 'subtitle' => $model->subtitle, 'category' => $model->category?->name,
                     'image' => $model->image_url, 'rate' => $model->price, 'unit' => $model->unit, 'days' => $mult,
                     'subtotal' => $model->price * $row['qty'] * $mult,
-                    'available' => Availability::product($model, $start, $end),
+                    'available' => $dated ? Availability::product($model, $start, $end) : $model->stock,
                 ];
             } else {
                 $model = Package::find($row['id']);
@@ -85,7 +92,7 @@ class Cart
                     'name' => $model->name, 'subtitle' => $model->summary, 'category' => 'Package',
                     'image' => $model->image_url, 'rate' => $unitPrice, 'unit' => $model->unit, 'days' => 1,
                     'subtotal' => $unitPrice * $row['qty'],
-                    'available' => Availability::package($model, $start, $end),
+                    'available' => $dated ? Availability::package($model, $start, $end) : $model->stock,
                 ];
             }
         }

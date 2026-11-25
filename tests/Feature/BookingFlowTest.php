@@ -59,7 +59,6 @@ class BookingFlowTest extends TestCase
         $package = Package::has('addons')->first();
         $addon = $package->addons->first();
 
-        $this->post('/availability', ['start' => now()->addDays(60)->toDateString(), 'end' => now()->addDays(62)->toDateString()]);
         $this->post("/cart/product/{$product->id}", ['qty' => 2]);
         $this->post("/cart/package/{$package->id}", ['addons' => [$addon->id]]);
 
@@ -68,11 +67,12 @@ class BookingFlowTest extends TestCase
         $this->get('/checkout')->assertOk()->assertSee('Data Diri');
 
         // Data diri wajib diisi
-        $this->post('/checkout', ['event_name' => 'X'])->assertSessionHasErrors(['customer_name', 'customer_phone']);
+        $this->post('/checkout', ['event_name' => 'X'])->assertSessionHasErrors(['customer_name', 'customer_phone', 'start_date', 'end_date']);
 
         $res = $this->post('/checkout', [
             'customer_name' => 'Budi Tamu', 'customer_phone' => '0812-1111-2222', 'customer_email' => 'budi@example.com',
             'event_name' => 'Test Event', 'venue_name' => 'Hall A', 'venue_address' => 'Jl. Test 1',
+            'start_date' => now()->addDays(60)->toDateString(), 'end_date' => now()->addDays(62)->toDateString(),
             'pic_name' => 'PIC', 'pic_phone' => '0812', 'notes' => 'Butuh genset',
         ]);
 
@@ -83,6 +83,8 @@ class BookingFlowTest extends TestCase
         $this->assertSame('Budi Tamu', $booking->customer_name);
         $this->assertSame($expected, (int) $booking->total);
         $this->assertSame('pending', $booking->status);
+        $this->assertSame(now()->addDays(60)->toDateString(), $booking->start_date->toDateString()); // tanggal dari form checkout
+        $this->assertSame(now()->addDays(62)->toDateString(), $booking->end_date->toDateString());
 
         // Stok ter-reserve untuk tanggal tsb
         $this->assertSame($package->stock - 1, \App\Services\Availability::package($package, $booking->start_date, $booking->end_date));
@@ -178,5 +180,38 @@ class BookingFlowTest extends TestCase
         $this->assertSame('wireless-mic-set', $p->slug);
         Storage::disk('public')->assertExists($p->image);
         $this->get('/products')->assertSee('Wireless Mic Set');
+    }
+
+    public function test_dates_are_chosen_at_checkout_not_in_header_bar(): void
+    {
+        // Bar "Event Availability Engine" sudah dihapus; footer menampilkan wilayah Bandung
+        $this->get('/')->assertOk()->assertDontSee('Check Availability')->assertDontSee('Event Availability Engine')
+            ->assertSee('Bandung, Jawa Barat');
+        $this->post('/availability', ['start' => now()->toDateString()])->assertNotFound();
+
+        $product = Product::where('unit', 'hari')->first();
+        $this->post("/cart/product/{$product->id}", ['qty' => 1]);
+        $this->get('/checkout')->assertOk()->assertSee('Tanggal Mulai Sewa')->assertSee('Tanggal Selesai Sewa');
+
+        $base = ['customer_name' => 'Sari', 'customer_phone' => '0812-3333-4444', 'event_name' => 'Seminar',
+            'venue_name' => 'Aula', 'venue_address' => 'Jl. A', 'pic_name' => 'Sari', 'pic_phone' => '0812'];
+
+        // Tanggal lampau / terbalik ditolak
+        $this->post('/checkout', $base + ['start_date' => now()->subDay()->toDateString(), 'end_date' => now()->addDay()->toDateString()])
+            ->assertSessionHasErrors('start_date');
+        $this->post('/checkout', $base + ['start_date' => now()->addDays(10)->toDateString(), 'end_date' => now()->addDays(8)->toDateString()])
+            ->assertSessionHasErrors('end_date');
+
+        // Stok penuh di tanggal itu → ditolak dengan pesan yang menyebut tanggalnya
+        $this->post("/cart/product/{$product->id}", ['qty' => $product->stock]); // total qty melebihi stok
+        $this->post('/checkout', $base + ['start_date' => now()->addDays(10)->toDateString(), 'end_date' => now()->addDays(11)->toDateString()])
+            ->assertSessionHasErrors('start_date');
+        $this->assertSame(0, Booking::where('event_name', 'Seminar')->count());
+
+        // Harga harian mengikuti lama sewa dari form: 4 hari
+        $this->patch('/cart/product-'.$product->id, ['qty' => 1]);
+        $this->post('/checkout', $base + ['start_date' => now()->addDays(20)->toDateString(), 'end_date' => now()->addDays(23)->toDateString()]);
+        $booking = Booking::where('event_name', 'Seminar')->firstOrFail();
+        $this->assertSame($product->price * 4 + (int) setting('logistics_fee'), (int) $booking->total);
     }
 }

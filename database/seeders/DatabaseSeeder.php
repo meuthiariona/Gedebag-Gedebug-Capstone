@@ -44,7 +44,7 @@ class DatabaseSeeder extends Seeder
             'support_email' => 'ops@google.com',
             'support_phone' => '+62 (21) 5092-8812',
             'whatsapp' => '6282198838172',
-            'support_region' => 'Jakarta & Bali Regional Dispatch',
+            'support_region' => 'Bandung, Jawa Barat',
             'ops_center_name' => 'Bandung Operations Center',
             'ops_center_address' => 'Jl. Dr. Setiabudi No. 128, Bandung',
             'dispatch_hub' => 'Fleet Dispatch: Regional Hub Bandung (West Java) Online',

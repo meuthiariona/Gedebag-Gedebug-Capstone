@@ -2,7 +2,6 @@
 @section('title', $package->name)
 
 @php
-    [$rs, $re, $days] = rental_dates();
     $images = array_values(array_unique(array_merge([$package->image_url], $package->gallery_urls)));
     $groups = collect(\App\Models\PackageItem::TYPES)->map(fn ($label, $type) => ['label' => $label, 'items' => $package->items->where('type', $type)])->filter(fn ($g) => $g['items']->isNotEmpty());
     $saved = in_array('package-'.$package->id, $wishKeys ?? []);
@@ -15,9 +14,9 @@
         <a href="{{ route('packages') }}" class="hover:underline">Packages</a><i data-lucide="chevron-right" class="w-3 h-3 text-muted"></i>
         <span class="font-semibold">{{ $package->name }}</span>
         <div class="ml-auto flex items-center gap-2 bg-soft rounded-full px-3 py-1">
-            <i data-lucide="calendar" class="w-3.5 h-3.5"></i> Selected: {{ $rs->format('j M Y') }} – {{ $re->format('j M Y') }} ({{ $days }} Days)
+            <i data-lucide="calendar" class="w-3.5 h-3.5"></i> Tanggal acara diisi saat checkout
             <span class="w-1.5 h-1.5 rounded-full {{ $package->available ? 'bg-emerald-500' : 'bg-red-500' }}"></span>
-            <span class="font-semibold">{{ $package->available }} Units Avail.</span>
+            <span class="font-semibold">{{ $package->available ? 'Tersedia' : 'Stok habis' }}</span>
         </div>
     </div>
 </div>
@@ -125,13 +124,13 @@
                     <div class="eyebrow text-muted">Package Total</div>
                     @if ($package->tier)<span class="bg-ink text-white text-[10px] font-bold px-2 py-0.5 rounded">{{ $package->tier }}</span>@endif
                 </div>
-                <div class="mt-1"><span class="text-3xl font-bold tracking-tight" x-text="'Rp ' + total.toLocaleString('id-ID')">{{ rupiah($package->price) }}</span> <span class="text-[11px] text-muted">/ {{ $days }}-day rental</span></div>
+                <div class="mt-1"><span class="text-3xl font-bold tracking-tight" x-text="'Rp ' + total.toLocaleString('id-ID')">{{ rupiah($package->price) }}</span> <span class="text-[11px] text-muted">/ {{ $package->unit ?: 'paket' }}</span></div>
 
                 <div class="bg-soft rounded-xl p-3 mt-4 text-[11.5px] space-y-1.5">
-                    <div class="flex justify-between"><span class="flex items-center gap-1.5 text-muted"><i data-lucide="calendar" class="w-3.5 h-3.5"></i> Booking Window:</span><span class="font-semibold">{{ $rs->format('j M') }} – {{ $re->format('j M Y') }}</span></div>
+                    <div class="flex justify-between"><span class="flex items-center gap-1.5 text-muted"><i data-lucide="calendar" class="w-3.5 h-3.5"></i> Tanggal acara:</span><span class="font-semibold">Diisi saat checkout</span></div>
                     <div class="flex justify-between"><span class="flex items-center gap-1.5 text-muted"><i data-lucide="map-pin" class="w-3.5 h-3.5"></i> Logistics:</span><span class="font-semibold">{{ setting('support_region', 'Regional Dispatch') }}</span></div>
                     <div class="flex justify-between"><span class="flex items-center gap-1.5 text-muted"><i data-lucide="box" class="w-3.5 h-3.5"></i> Availability:</span>
-                        <span class="font-semibold {{ $package->available ? 'text-emerald-600' : 'text-red-600' }}">{{ $package->available ? '✓ '.$package->available.' In Stock' : 'Fully booked' }}</span></div>
+                        <span class="font-semibold {{ $package->available ? 'text-emerald-600' : 'text-red-600' }}">{{ $package->available ? '✓ Tersedia' : 'Stok habis' }}</span></div>
                 </div>
 
                 <div class="text-[11.5px] space-y-1.5 mt-4">

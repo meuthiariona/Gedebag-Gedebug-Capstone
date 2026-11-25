@@ -102,7 +102,7 @@
                 <p class="text-[11.5px] text-muted mt-1 line-clamp-2">{{ $package->summary }}</p>
                 <div class="flex items-center gap-1.5 text-[10.5px] font-semibold mt-4 tracking-wide">
                     <span class="w-1.5 h-1.5 rounded-full {{ ($package->available ?? 1) > 0 ? 'bg-emerald-500' : 'bg-red-500' }}"></span>
-                    {{ $package->available ?? 0 }} {{ Str::plural('package', $package->available ?? 0) }} available for {{ rental_range_label() }}
+                    {{ ($package->available ?? 0) > 0 ? 'Tersedia · jadwal dicek saat checkout' : 'Stok habis' }}
                 </div>
                 <div class="flex items-end justify-between mt-2">
                     <div>

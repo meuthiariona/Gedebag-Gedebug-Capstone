@@ -14,7 +14,6 @@ Route::get('/', [ShopController::class, 'home'])->name('home');
 Route::get('/products', [ShopController::class, 'products'])->name('products');
 Route::get('/packages', [ShopController::class, 'packages'])->name('packages');
 Route::get('/packages/{slug}', [ShopController::class, 'package'])->name('packages.show');
-Route::post('/availability', [ShopController::class, 'setDates'])->name('availability');
 
 Route::get('/cart', [CartController::class, 'index'])->name('cart.index');
 Route::post('/cart/product/{product}', [CartController::class, 'addProduct'])->name('cart.product');

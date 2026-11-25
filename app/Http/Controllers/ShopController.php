@@ -7,9 +7,7 @@ use App\Models\HeroSlide;
 use App\Models\Package;
 use App\Models\PackageCategory;
 use App\Models\Product;
-use App\Services\Availability;
 use Illuminate\Http\Request;
-use Illuminate\Support\Carbon;
 
 class ShopController extends Controller
 {
@@ -56,7 +54,7 @@ class ShopController extends Controller
         $packages = Package::active()->with('category')
             ->when($active, fn ($q) => $q->whereHas('category', fn ($c) => $c->where('slug', $active)))
             ->get()
-            ->each(fn ($p) => $p->available = Availability::package($p));
+            ->each(fn ($p) => $p->available = $p->stock); // ketersediaan per tanggal dicek saat checkout
 
         $total = Package::where('is_active', true)->count();
 
@@ -66,25 +64,9 @@ class ShopController extends Controller
     public function package(string $slug)
     {
         $package = Package::active()->where('slug', $slug)->with(['items', 'addons', 'category'])->firstOrFail();
-        $package->available = Availability::package($package);
+        $package->available = $package->stock; // ketersediaan per tanggal dicek saat checkout
         $related = Package::active()->where('id', '!=', $package->id)->inRandomOrder()->take(3)->get();
 
         return view('shop.package', compact('package', 'related'));
-    }
-
-    /** "Event Availability Engine" — simpan tanggal sewa yang dipilih ke session. */
-    public function setDates(Request $request)
-    {
-        $data = $request->validate([
-            'start' => ['required', 'date', 'after_or_equal:today'],
-            'end' => ['required', 'date', 'after_or_equal:start'],
-        ], [], ['start' => 'tanggal mulai', 'end' => 'tanggal selesai']);
-
-        session([
-            'rental_start' => Carbon::parse($data['start'])->toDateString(),
-            'rental_end' => Carbon::parse($data['end'])->toDateString(),
-        ]);
-
-        return back()->with('success', 'Ketersediaan diperbarui untuk '.rental_range_label().'.');
     }
 }
