@@ -37,3 +37,25 @@ Illuminate\Support\Facades\Schedule::command('backup:run --type=auto')
     ->cron(config('backup.schedule'))
     ->timezone(env('BACKUP_TIMEZONE', 'Asia/Jakarta'))
     ->withoutOverlapping();
+
+// ---------- Google Calendar (lihat config/services.php → google_calendar) ----------
+
+Artisan::command('calendar:sync {--all : kirim ulang semua booking aktif, bukan hanya yang tertunda}', function (App\Services\BookingCalendarSync $sync) {
+    if (! $sync->enabled()) {
+        return $this->warn('Google Calendar belum dikonfigurasi (GOOGLE_CALENDAR_ID / file kredensial).');
+    }
+    $bookings = $this->option('all')
+        ? App\Models\Booking::where('end_date', '>=', now()->subDays(30)->toDateString())->get()
+        : $sync->pending();
+    $result = ['created' => 0, 'updated' => 0, 'deleted' => 0, 'skipped' => 0, 'failed' => 0];
+    foreach ($bookings as $booking) {
+        $result[$sync->sync($booking)]++;
+    }
+    $this->info("Sinkron selesai: {$result['created']} dibuat, {$result['updated']} diperbarui, {$result['deleted']} dihapus, {$result['failed']} gagal.");
+    if ($result['created'] + $result['updated'] + $result['deleted'] + $result['failed'] > 0) {
+        App\Models\ActivityLog::record('calendar_synced', 'Sinkron Google Calendar terjadwal: '.$result['created'].' dibuat, '.$result['updated'].' diperbarui, '.$result['deleted'].' dihapus, '.$result['failed'].' gagal', null, null, $result);
+    }
+})->purpose('Sinkronkan booking ke Google Calendar (coba ulang yang tertunda/gagal)');
+
+// Jaring pengaman: sinkron otomatis saat simpan booking bisa gagal (internet putus dsb.), jadi dicoba ulang tiap 10 menit.
+Illuminate\Support\Facades\Schedule::command('calendar:sync')->everyTenMinutes()->withoutOverlapping();

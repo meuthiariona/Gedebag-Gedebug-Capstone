@@ -96,6 +96,9 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin', 'staff.sess
     // Booking: semua staf boleh melihat
     Route::middleware('permission:bookings.view')->group(function () {
         Route::get('bookings', [Admin\BookingController::class, 'index'])->name('bookings.index');
+        // Kalender booking + event Google Calendar (harus sebelum bookings/{booking})
+        Route::get('bookings/calendar', [Admin\CalendarController::class, 'index'])->name('bookings.calendar');
+        Route::get('bookings/calendar/events', [Admin\CalendarController::class, 'events'])->name('bookings.calendar.events');
         Route::get('bookings/{booking}', [Admin\BookingController::class, 'show'])->name('bookings.show');
     });
     // Ubah detail booking: Operasional (status, logistik) & Keuangan (diskon, DP) — field dibatasi di controller
@@ -104,6 +107,7 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin', 'staff.sess
     Route::middleware('permission:bookings.manage')->group(function () {
         Route::post('bookings/{booking}/items', [Admin\BookingController::class, 'storeItem'])->name('bookings.items.store');
         Route::delete('booking-items/{item}', [Admin\BookingController::class, 'destroyItem'])->name('bookings.items.destroy');
+        Route::post('bookings/calendar/sync', [Admin\CalendarController::class, 'sync'])->name('bookings.calendar.sync');
     });
     Route::delete('bookings/{booking}', [Admin\BookingController::class, 'destroy'])->name('bookings.destroy')
         ->middleware('permission:bookings.delete');

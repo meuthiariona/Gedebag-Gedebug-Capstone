@@ -14,7 +14,34 @@ class Booking extends Model
         'start_date' => 'date',
         'end_date' => 'date',
         'hold_expires_at' => 'datetime',
+        'google_synced_at' => 'datetime',
     ];
+
+    /**
+     * Sinkron otomatis ke Google Calendar. Dijalankan dengan defer(): halaman admin
+     * selesai dimuat dulu, panggilan ke Google terjadi setelah respons terkirim.
+     * Nama defer per booking memastikan beberapa kali simpan dalam satu request = satu sinkron.
+     */
+    protected static function booted(): void
+    {
+        static::saved(function (Booking $booking) {
+            if ($booking->wasRecentlyCreated || $booking->wasChanged(\App\Services\BookingCalendarSync::WATCHED)) {
+                $id = $booking->id;
+                \Illuminate\Support\defer(function () use ($id) {
+                    if ($fresh = Booking::find($id)) {
+                        app(\App\Services\BookingCalendarSync::class)->sync($fresh);
+                    }
+                }, 'google-calendar-booking-'.$id);
+            }
+        });
+
+        static::deleted(function (Booking $booking) {
+            $eventId = $booking->google_event_id;
+            if ($eventId) {
+                \Illuminate\Support\defer(fn () => app(\App\Services\BookingCalendarSync::class)->forget($eventId), 'google-calendar-booking-'.$booking->id);
+            }
+        });
+    }
 
     public const STAGES = [
         ['label' => 'Booking Created', 'icon' => 'check'],

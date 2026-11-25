@@ -8,6 +8,13 @@
 @endphp
 <div class="flex flex-wrap items-center gap-2 mb-4">
     <a href="{{ route('admin.bookings.index') }}" class="text-[12px] text-muted flex items-center gap-1"><i data-lucide="arrow-left" class="w-3.5 h-3.5"></i> Semua booking</a>
+    @if (config('services.google_calendar.calendar_id'))
+        @if ($booking->google_sync_error)
+            <span class="text-[11px] text-amber-700 flex items-center gap-1" title="{{ $booking->google_sync_error }}"><i data-lucide="alert-triangle" class="w-3.5 h-3.5"></i> Gagal sinkron Google Calendar (dicoba ulang otomatis)</span>
+        @elseif ($booking->google_event_id)
+            <span class="text-[11px] text-emerald-700 flex items-center gap-1"><i data-lucide="calendar-check-2" class="w-3.5 h-3.5"></i> Tersinkron ke Google Calendar{{ $booking->google_synced_at ? ' · '.$booking->google_synced_at->setTimezone(config('services.google_calendar.timezone'))->format('d M H:i') : '' }}</span>
+        @endif
+    @endif
     <div class="ml-auto flex gap-2">
         <a href="{{ route('bookings.show', $booking) }}" target="_blank" class="h-9 px-4 rounded-full bg-white border border-line text-[12px] font-semibold flex items-center gap-1.5"><i data-lucide="eye" class="w-3.5 h-3.5"></i> Tampilan customer</a>
         <a href="{{ route('bookings.invoice', $booking) }}" target="_blank" class="h-9 px-4 rounded-full bg-white border border-line text-[12px] font-semibold flex items-center gap-1.5"><i data-lucide="receipt" class="w-3.5 h-3.5"></i> Invoice</a>

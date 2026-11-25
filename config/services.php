@@ -35,4 +35,15 @@ return [
         ],
     ],
 
+    // Integrasi Google Calendar memakai Service Account (server-to-server, tanpa login Google per admin).
+    // Kalender GIE dibagikan ke email service account dengan izin "Make changes to events".
+    'google_calendar' => [
+        'credentials' => env('GOOGLE_CALENDAR_CREDENTIALS', storage_path('app/private/google-calendar.json')),
+        'calendar_id' => env('GOOGLE_CALENDAR_ID'),
+        'timezone' => env('GOOGLE_CALENDAR_TIMEZONE', 'Asia/Jakarta'),
+        // Status booking yang dikirim ke Google Calendar. Pending tidak dikirim supaya kalender tim
+        // hanya berisi event yang sudah pasti (DP masuk).
+        'sync_statuses' => ['confirmed', 'completed'],
+    ],
+
 ];

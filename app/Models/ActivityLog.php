@@ -35,6 +35,7 @@ class ActivityLog extends Model
         'backup_uploaded' => 'Backup di-upload',
         'backup_restored' => 'Restore',
         'backup_deleted' => 'Backup dihapus',
+        'calendar_synced' => 'Sinkron kalender',
         'logout' => 'Logout',
     ];
 
