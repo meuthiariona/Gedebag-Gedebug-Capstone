@@ -12,4 +12,3 @@ CHANGELOG.md export-ignore
 
 # Skrip shell harus berakhiran LF (Unix) walau di-clone di Windows, kalau tidak container gagal menjalankannya
 *.sh text eol=lf
-infra/**/*.conf text eol=lf
