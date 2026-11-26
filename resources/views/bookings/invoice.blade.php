@@ -5,7 +5,7 @@
 <div x-data="{ show: true }" x-show="show" class="bg-soft/70 border-b border-line no-print">
     <div class="max-w-[1180px] mx-auto px-4 sm:px-6 py-2.5 flex items-center gap-2 text-[11px]">
         <i data-lucide="circle-check" class="w-4 h-4"></i>
-        Invoice <b>#{{ $booking->invoice_no }}</b> generated successfully for <b>{{ $booking->customer_email ?: $booking->customer_phone }}</b> &amp; customer primary contact.
+        Invoice <b>#{{ $booking->invoice_no }}</b> untuk <b>{{ $booking->customer_name }}</b>.
         <button @click="show = false" class="ml-auto"><i data-lucide="x" class="w-4 h-4"></i></button>
     </div>
 </div>
@@ -19,12 +19,16 @@
 @endphp
 <div class="max-w-[900px] mx-auto px-4 sm:px-6 pt-6">
     <div class="flex flex-wrap items-center gap-2 no-print">
+        @unless (request()->routeIs('bookings.emailed-invoice'))
         <div class="text-[11px] text-muted">
             <a href="{{ route('home') }}" class="hover:underline">Home</a> / <a href="{{ route('bookings.index') }}" class="hover:underline">My Bookings</a> /
             <a href="{{ route('bookings.show', $booking) }}" class="hover:underline">Booking #{{ $booking->code }}</a> / <span class="text-ink font-semibold">Invoice</span>
         </div>
+        @endunless
         <div class="ml-auto flex gap-2">
+            @unless (request()->routeIs('bookings.emailed-invoice'))
             <a href="{{ route('bookings.show', $booking) }}" class="h-9 px-4 rounded-full bg-soft text-[11.5px] font-semibold flex items-center gap-1.5"><i data-lucide="arrow-left" class="w-3.5 h-3.5"></i> Back to Booking Details</a>
+            @endunless
             <button onclick="window.print()" class="h-9 px-4 rounded-full bg-soft text-[11.5px] font-semibold flex items-center gap-1.5"><i data-lucide="printer" class="w-3.5 h-3.5"></i> Print</button>
             <button onclick="window.print()" class="h-9 px-4 rounded-full bg-ink text-white text-[11.5px] font-bold flex items-center gap-1.5"><i data-lucide="download" class="w-3.5 h-3.5"></i> Download PDF</button>
         </div>
@@ -48,7 +52,7 @@
                 <div class="text-[12px] font-semibold">Tax &amp; Hardware Dispatch Voucher</div>
                 <div class="bg-soft rounded-xl p-3 mt-4 text-[11.5px] space-y-1 text-left sm:ml-auto sm:w-60">
                     <div class="flex justify-between"><span class="text-muted">Invoice No.</span><b>{{ $booking->invoice_no }}</b></div>
-                    <div class="flex justify-between"><span class="text-muted">Date Issued</span><span>{{ $booking->created_at->format('j M Y') }}</span></div>
+                    <div class="flex justify-between"><span class="text-muted">Date Issued</span><span>{{ ($booking->invoice_issued_at ?? $booking->created_at)->format('j M Y') }}</span></div>
                     <div class="flex justify-between"><span class="text-muted">Due Date</span><span>{{ $booking->start_date->format('j M Y') }}</span></div>
                     <div class="flex justify-between"><span class="text-muted">Booking Ref</span><b>#{{ $booking->code }}</b></div>
                 </div>
@@ -118,7 +122,10 @@
                     <div class="flex justify-between"><span class="text-muted">Freight, Rigging &amp; Transit</span><b>{{ rupiah($booking->logistics_fee) }}</b></div>
                 </div>
                 <div class="bg-white rounded-lg p-3 mt-3">
-                    <div class="flex justify-between items-center"><span class="font-semibold">Grand Total</span><span class="text-2xl font-bold">{{ rupiah($booking->total) }}</span></div>
+                    @if ($booking->negotiation_adjustment)
+                        <div class="flex justify-between"><span class="text-muted">Penyesuaian hasil nego</span><span>{{ $booking->negotiation_adjustment < 0 ? '− ' : '+ ' }}{{ rupiah(abs($booking->negotiation_adjustment)) }}</span></div>
+                    @endif
+                    <div class="flex justify-between items-center"><span class="font-semibold">{{ $booking->negotiated_total !== null ? 'Total harga kesepakatan' : 'Grand Total' }}</span><span class="text-2xl font-bold">{{ rupiah($booking->total) }}</span></div>
                     <div class="flex justify-between text-[11px] mt-1"><span class="text-muted">Paid to date</span><span>{{ rupiah($booking->amount_paid) }}</span></div>
                     @if ($dpPay)<div class="flex justify-between text-[11px]"><span class="text-muted">Transaction Ref:</span><span>{{ $dpPay->reference ?: '-' }}</span></div>@endif
                 </div>

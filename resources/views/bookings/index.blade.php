@@ -85,18 +85,21 @@
                             <b>{{ $booking->payment_status === 'unpaid' ? rupiah($booking->dp_amount) : rupiah($booking->remaining).($booking->remaining === 0 ? ' (Lunas)' : '') }}</b></div>
                     </div>
                     <div class="text-[10.5px] text-muted mt-2">
-                        @if ($booking->payment_status === 'paid') Official tax receipt #{{ $booking->invoice_no }} issued
+                        @if ($booking->payment_status === 'paid') Invoice #{{ $booking->invoice_no }} · Lunas
                         @elseif ($booking->payment_status === 'dp_paid') Due on final technical load-in ({{ $booking->start_date->format('j M') }})
+                        @elseif ($booking->negotiation_status === 'approved') Harga disetujui, menunggu pembayaran
                         @else Harga final & pembayaran disepakati via WhatsApp @endif
                     </div>
                     <div class="mt-4 space-y-2">
                         @if ($booking->payment_status === 'unpaid' && $booking->status === 'pending')
-                            <a href="{{ route('orders.whatsapp', $booking->access_token) }}" target="_blank" rel="noopener" class="w-full h-10 rounded-full bg-emerald-600 text-white text-[12px] font-bold flex items-center justify-center gap-2"><i data-lucide="message-circle" class="w-4 h-4"></i> Negosiasi via WhatsApp</a>
+                            <a href="{{ route('orders.whatsapp', $booking->access_token) }}" target="_blank" rel="noopener" class="w-full h-10 rounded-full bg-emerald-600 text-white text-[12px] font-bold flex items-center justify-center gap-2"><i data-lucide="message-circle" class="w-4 h-4"></i> {{ $booking->negotiation_status === 'approved' ? 'Bayar via WhatsApp' : 'Negosiasi via WhatsApp' }}</a>
                             <a href="{{ route('bookings.show', $booking) }}" class="w-full h-9 rounded-full bg-white text-[12px] font-semibold flex items-center justify-center gap-1">View Details <i data-lucide="arrow-right" class="w-3.5 h-3.5"></i></a>
                         @else
                             <a href="{{ route('bookings.show', $booking) }}" class="w-full h-10 rounded-full bg-ink text-white text-[12px] font-bold flex items-center justify-center gap-2">View Booking Details <i data-lucide="arrow-right" class="w-4 h-4"></i></a>
                             <div class="grid grid-cols-2 gap-2">
+                                @if ($booking->invoice_available)
                                 <a href="{{ route('bookings.invoice', $booking) }}" class="h-9 rounded-full bg-white text-[11.5px] font-semibold flex items-center justify-center gap-1"><i data-lucide="file-text" class="w-3.5 h-3.5"></i> Invoice</a>
+                                @endif
                                 <a href="https://wa.me/{{ setting('whatsapp', '6281234567890') }}?text={{ urlencode('Halo Lead Engineer, terkait booking #'.$booking->code) }}" target="_blank" class="h-9 rounded-full bg-white text-[11.5px] font-semibold flex items-center justify-center gap-1"><i data-lucide="headset" class="w-3.5 h-3.5"></i> Lead Eng.</a>
                             </div>
                         @endif

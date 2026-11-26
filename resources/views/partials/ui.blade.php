@@ -44,6 +44,7 @@
         <div class="px-1.5 pt-3 pb-1 flex-1 flex flex-col">
             <h3 class="text-[13px] font-semibold leading-tight">{{ $product->name }}</h3>
             <p class="text-[11px] text-muted mt-0.5 line-clamp-1">{{ $product->subtitle }}</p>
+            <a href="{{ route('products.availability', $product) }}" class="inline-block mt-1 text-[11px] font-semibold underline">Cek jadwal</a>
             <div class="flex items-end justify-between mt-auto pt-3">
                 <div>
                     <div class="text-[14px] font-bold">{{ rupiah($product->price) }}</div>

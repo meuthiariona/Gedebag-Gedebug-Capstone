@@ -15,6 +15,8 @@ class Booking extends Model
         'end_date' => 'date',
         'hold_expires_at' => 'datetime',
         'google_synced_at' => 'datetime',
+        'invoice_issued_at' => 'datetime',
+        'invoice_emailed_at' => 'datetime',
     ];
 
     /**
@@ -75,14 +77,31 @@ class Booking extends Model
         return $this->hasMany(BookingLog::class)->orderBy('stage');
     }
 
+    public function feedback(): \Illuminate\Database\Eloquent\Relations\HasOne
+    {
+        return $this->hasOne(BookingFeedback::class);
+    }
+
     public function payments()
     {
         return $this->hasMany(Payment::class)->latest();
     }
 
+    public function getInvoiceAvailableAttribute(): bool
+    {
+        return $this->invoice_issued_at !== null
+            || ($this->negotiation_status === null && $this->status !== 'cancelled');
+    }
+
     public function getDaysAttribute(): int
     {
         return (int) $this->start_date->diffInDays($this->end_date) + 1;
+    }
+
+    public function getNegotiationAdjustmentAttribute(): int
+    {
+        return $this->negotiated_total === null ? 0
+            : $this->negotiated_total - ($this->subtotal + $this->logistics_fee - $this->discount);
     }
 
     public function getRemainingAttribute(): int
@@ -170,7 +189,7 @@ class Booking extends Model
         $this->update([
             'subtotal' => $subtotal,
             'logistics_fee' => $logistics,
-            'total' => max(0, $subtotal + $logistics - $this->discount),
+            'total' => $this->negotiated_total ?? max(0, $subtotal + $logistics - $this->discount),
         ]);
     }
 
@@ -179,8 +198,18 @@ class Booking extends Model
     {
         $this->increment('amount_paid', $payment->amount);
         $this->refresh();
+        if ($this->amount_paid >= $this->dp_amount && $this->invoice_issued_at === null) {
+            $this->update(['invoice_issued_at' => now()]);
+        }
         if ($this->amount_paid >= $this->dp_amount && $this->status === 'pending') {
-            $this->update(['status' => 'confirmed', 'hold_expires_at' => null]);
+            $confirmation = ['status' => 'confirmed', 'hold_expires_at' => null];
+            if ($this->negotiation_status === 'approved') {
+                $confirmation += [
+                    'phase_title' => 'Booking terkonfirmasi',
+                    'phase_note' => 'Pembayaran dikonfirmasi dan stok sudah direservasi.',
+                ];
+            }
+            $this->update($confirmation);
         }
         if ($this->amount_paid >= $this->dp_amount && $this->stage < 1) {
             $this->advanceTo(1, 'DP diterima via '.$payment->method);
@@ -241,7 +270,8 @@ class Booking extends Model
         if ($this->discount) {
             $lines[] = 'Diskon – -'.rupiah($this->discount);
         }
-        $lines[] = '*Estimasi total: '.rupiah($this->total).'*';
+        $label = $this->negotiated_total === null ? 'Estimasi total' : 'Harga kesepakatan';
+        $lines[] = '*'.$label.': '.rupiah($this->total).'*';
 
         if ($this->notes) {
             array_push($lines, '', '*Catatan:* '.$this->notes);

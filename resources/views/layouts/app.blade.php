@@ -52,6 +52,8 @@
         // [label, route, ikon, pola aktif, izin yang dibutuhkan]
         ['Dashboard', 'admin.dashboard', 'layout-dashboard', 'admin.dashboard', 'admin.access'],
         ['Booking', 'admin.bookings.index', 'calendar-check', 'admin.bookings.*', 'bookings.view'],
+        ['Rekap Uang Masuk', 'admin.cash-receipts.index', 'wallet', 'admin.cash-receipts.*', 'finance.manage'],
+        ['Feedback', 'admin.feedback.index', 'message-square', 'admin.feedback.*', 'bookings.view'],
         ['Produk & Talent', 'admin.products.index', 'speaker', 'admin.products.*', 'catalog.manage'],
         ['Kategori Produk', 'admin.categories.index', 'folder', 'admin.categories.*', 'catalog.manage'],
         ['Paket Event', 'admin.packages.index', 'package', 'admin.packages.*', 'catalog.manage'],

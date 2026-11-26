@@ -10,6 +10,8 @@ class BookingItem extends Model
 
     protected $guarded = ['id'];
 
+    protected $casts = ['inventory_components' => 'array'];
+
     public function booking()
     {
         return $this->belongsTo(Booking::class);

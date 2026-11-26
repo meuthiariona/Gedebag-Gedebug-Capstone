@@ -7,6 +7,8 @@ use App\Models\HeroSlide;
 use App\Models\Package;
 use App\Models\PackageCategory;
 use App\Models\Product;
+use App\Services\Availability;
+use Illuminate\Support\Carbon;
 use Illuminate\Http\Request;
 
 class ShopController extends Controller
@@ -44,6 +46,19 @@ class ShopController extends Controller
             ->filter(fn ($g) => $g['products']->isNotEmpty());
 
         return view('shop.products', compact('categories', 'active', 'search', 'grouped', 'products', 'packages'));
+    }
+
+    public function availability(Request $request, Product $product)
+    {
+        abort_unless($product->is_active && $product->category?->is_active, 404);
+        $filters = $request->validate(['month' => ['nullable', 'date_format:Y-m']]);
+        $firstMonth = today()->startOfMonth();
+        $lastMonth = today()->addYears(2)->startOfMonth();
+        $month = isset($filters['month']) ? Carbon::createFromFormat('!Y-m', $filters['month']) : $firstMonth;
+        abort_unless($month->betweenIncluded($firstMonth, $lastMonth), 404);
+        $days = Availability::productCalendar($product, $month, $month->copy()->endOfMonth());
+
+        return view('shop.availability', compact('product', 'month', 'days', 'firstMonth', 'lastMonth'));
     }
 
     public function packages(Request $request)

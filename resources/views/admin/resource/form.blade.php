@@ -83,7 +83,10 @@
 
 {{-- Bagian tambahan khusus edit paket: isi paket & add-on --}}
 @if ($extra === 'package')
-@php $cls = 'h-10 px-3 rounded-xl border border-line text-sm outline-none focus:border-ink'; @endphp
+@php
+    $cls = 'h-10 px-3 rounded-xl border border-line text-sm outline-none focus:border-ink';
+    $inventoryProducts = \App\Models\Product::orderBy('name')->get();
+@endphp
 <div class="grid xl:grid-cols-2 gap-5 mt-6 max-w-6xl">
     {{-- Isi paket --}}
     <div class="bg-white border border-line rounded-2xl p-6">
@@ -94,6 +97,16 @@
                     <span class="text-[10px] uppercase font-bold bg-soft rounded px-1.5 py-0.5">{{ $pi->type }}</span>
                     <b>{{ $pi->qty }}×</b>
                     <div class="min-w-0"><div class="font-semibold">{{ $pi->name }}</div><div class="text-[11px] text-muted">{{ $pi->subtitle }} @if($pi->tag) · {{ $pi->tag }} @endif</div></div>
+                    <form action="{{ route('admin.packages.items.inventory', $pi) }}" method="POST" class="flex flex-wrap gap-1 ml-auto">
+                        @csrf @method('PATCH')
+                        <select name="product_id" aria-label="Inventori untuk {{ $pi->name }}" class="max-w-44 rounded border border-line p-1 text-xs">
+                            <option value="">Tanpa stok inventori</option>
+                            @foreach ($inventoryProducts as $product)
+                                <option value="{{ $product->id }}" @selected($pi->product_id === $product->id)>{{ $product->name }}</option>
+                            @endforeach
+                        </select>
+                        <button class="rounded bg-soft px-2 py-1 text-xs font-semibold">Simpan</button>
+                    </form>
                     <form action="{{ route('admin.packages.items.destroy', $pi) }}" method="POST" class="ml-auto">@csrf @method('DELETE')
                         <button class="text-red-600"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
                     </form>
@@ -108,6 +121,10 @@
             <input name="name" placeholder="Nama item *" required class="{{ $cls }} col-span-3">
             <input name="subtitle" placeholder="Keterangan (mis. JBL SRX / RCF ART 715)" class="{{ $cls }} col-span-4">
             <input name="tag" placeholder="Tag (FRONT OF HOUSE)" class="{{ $cls }} col-span-2">
+            <select name="product_id" aria-label="Inventori item paket" class="{{ $cls }} col-span-6 bg-white">
+                <option value="">Tanpa stok inventori</option>
+                @foreach ($inventoryProducts as $product)<option value="{{ $product->id }}">{{ $product->name }}</option>@endforeach
+            </select>
             <button class="col-span-6 h-10 rounded-full bg-ink text-white text-[12px] font-bold">+ Tambah item</button>
         </form>
     </div>

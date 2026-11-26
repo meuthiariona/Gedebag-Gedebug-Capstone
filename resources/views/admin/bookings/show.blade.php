@@ -17,7 +17,9 @@
     @endif
     <div class="ml-auto flex gap-2">
         <a href="{{ route('bookings.show', $booking) }}" target="_blank" class="h-9 px-4 rounded-full bg-white border border-line text-[12px] font-semibold flex items-center gap-1.5"><i data-lucide="eye" class="w-3.5 h-3.5"></i> Tampilan customer</a>
+        @if ($booking->invoice_available)
         <a href="{{ route('bookings.invoice', $booking) }}" target="_blank" class="h-9 px-4 rounded-full bg-white border border-line text-[12px] font-semibold flex items-center gap-1.5"><i data-lucide="receipt" class="w-3.5 h-3.5"></i> Invoice</a>
+        @endif
         @can('bookings.delete')
         <form action="{{ route('admin.bookings.destroy', $booking) }}" method="POST" onsubmit="return confirm('Hapus booking ini permanen?')">@csrf @method('DELETE')
             <button class="h-9 px-4 rounded-full text-red-600 bg-red-50 text-[12px] font-semibold">Hapus</button>
@@ -28,6 +30,40 @@
 
 <div class="grid xl:grid-cols-[1fr_380px] gap-5 items-start">
     <div class="space-y-5">
+        @if ($booking->negotiation_status !== null || ($booking->status === 'pending' && $booking->amount_paid === 0))
+            <section class="bg-white border border-line rounded-2xl p-6">
+                <h2 class="font-semibold">Negosiasi</h2>
+                <p class="text-sm text-muted mt-1">
+                    {{ match ($booking->negotiation_status) {
+                        'approved' => 'Harga sudah disetujui',
+                        'rejected' => 'Pesanan ditolak',
+                        default => 'Menunggu persetujuan harga',
+                    } }}
+                    @if ($booking->status === 'pending' && $booking->hold_expires_at)
+                        · {{ $booking->hold_expires_at->isFuture() ? 'Stok ditahan sampai '.$booking->hold_expires_at->format('d/m/Y H:i') : 'Penahanan stok sudah habis' }}
+                    @endif
+                </p>
+                @can('bookings.negotiate')
+                    @if ($booking->status === 'pending')
+                        <form action="{{ route('admin.bookings.negotiate', $booking) }}" method="POST" class="mt-4 grid sm:grid-cols-2 gap-3">
+                            @csrf
+                            <label class="text-sm">Total akhir hasil nego (Rp)
+                                <input type="number" name="negotiated_total" min="1" max="999999999999" value="{{ old('negotiated_total', $booking->total) }}" class="{{ $cls }} mt-1" @readonly($booking->amount_paid > 0)>
+                            </label>
+                            <label class="text-sm">Email customer untuk invoice
+                                <input type="email" name="customer_email" value="{{ old('customer_email', $booking->customer_email) }}" class="{{ $cls }} mt-1">
+                            </label>
+                            <div class="sm:col-span-2 flex gap-2">
+                                <button name="decision" value="approve" class="px-4 py-2 rounded-full bg-ink text-white text-sm font-semibold">{{ $booking->negotiation_status === 'approved' ? 'Simpan ACC' : 'ACC harga' }}</button>
+                                @if ($booking->amount_paid === 0)
+                                    <button name="decision" value="reject" formnovalidate onclick="return confirm('Tolak pesanan dan lepas stok?')" class="px-4 py-2 rounded-full bg-red-50 text-red-700 text-sm font-semibold">Tolak</button>
+                                @endif
+                            </div>
+                        </form>
+                    @endif
+                @endcan
+            </section>
+        @endif
         <form action="{{ route('admin.bookings.update', $booking) }}" method="POST" class="bg-white border border-line rounded-2xl p-6">
             @csrf @method('PUT')
             @php
@@ -46,11 +82,11 @@
             <div class="grid sm:grid-cols-3 gap-4 mt-5">
                 <div>
                     <label class="text-[12px] font-semibold">Status booking</label>
-                    <select name="status" class="{{ $cls }} bg-white">@foreach (\App\Models\Booking::STATUSES as $k => $v)<option value="{{ $k }}" @selected($booking->status === $k)>{{ $v }}</option>@endforeach</select>
+                    <select name="status" class="{{ $cls }} bg-white">@foreach (\App\Models\Booking::STATUSES as $k => $v)<option value="{{ $k }}" @selected($booking->status === $k) @disabled($booking->negotiation_status !== null && $k !== $booking->status && ($booking->status === 'cancelled' || ($booking->status === 'pending' && $k !== 'cancelled')))>{{ $v }}</option>@endforeach</select>
                 </div>
                 <div>
                     <label class="text-[12px] font-semibold">Tahap pipeline</label>
-                    <select name="stage" class="{{ $cls }} bg-white">@foreach (\App\Models\Booking::STAGES as $i => $s)<option value="{{ $i }}" @selected($booking->stage === $i)>{{ $i + 1 }}. {{ $s['label'] }}</option>@endforeach</select>
+                    <select name="stage" class="{{ $cls }} bg-white">@foreach (\App\Models\Booking::STAGES as $i => $s)<option value="{{ $i }}" @selected($booking->stage === $i) @disabled($booking->negotiation_status !== null && $booking->status === 'pending' && $i > 0)>{{ $i + 1 }}. {{ $s['label'] }}</option>@endforeach</select>
                 </div>
                 <div>
                     <label class="text-[12px] font-semibold">Label inspeksi</label>
@@ -91,7 +127,7 @@
             <fieldset @disabled(! $canFinance) class="{{ $canFinance ? '' : 'opacity-60' }}">
             <h3 class="text-[12px] uppercase tracking-wider text-muted font-semibold mt-6 flex items-center gap-1.5">Keuangan @unless ($canFinance)<i data-lucide="lock" class="w-3.5 h-3.5"></i><span class="normal-case tracking-normal font-normal">hanya Admin Keuangan / Owner</span>@endunless</h3>
             <div class="grid sm:grid-cols-3 gap-4 mt-2">
-                <div><label class="text-[12px] font-semibold">Diskon (Rp)</label><input name="discount" value="{{ number_format($booking->discount, 0, ',', '.') }}" class="{{ $cls }}"></div>
+                <div><label class="text-[12px] font-semibold">Diskon (Rp)</label><input name="discount" value="{{ number_format($booking->discount, 0, ',', '.') }}" class="{{ $cls }}" @disabled($booking->negotiated_total !== null)></div>
                 <div><label class="text-[12px] font-semibold">DP (%)</label><input type="number" name="dp_percent" value="{{ $booking->dp_percent }}" class="{{ $cls }}"></div>
             </div>
             </fieldset>
@@ -117,10 +153,19 @@
             </table>
             @can('bookings.manage')
             <form action="{{ route('admin.bookings.items.store', $booking) }}" method="POST" class="grid grid-cols-2 sm:grid-cols-6 gap-2 mt-4 border-t border-line pt-4">@csrf
-                <input name="name" placeholder="Nama item *" required class="{{ $cls }} col-span-2">
+                <input name="name" placeholder="Nama item (jika tanpa inventori)" class="{{ $cls }} col-span-2">
                 <input name="description" placeholder="Keterangan" class="{{ $cls }} col-span-2">
                 <input name="category" placeholder="Kategori (SOUND SYSTEM)" class="{{ $cls }} col-span-2">
-                <select name="item_type" class="{{ $cls }} bg-white"><option value="product">product</option><option value="talent">talent</option><option value="crew">crew</option><option value="addon">addon</option><option value="service">service (logistik)</option></select>
+                <select name="item_type" class="{{ $cls }} bg-white"><option value="product">product</option><option value="package">package</option><option value="talent">talent</option><option value="crew">crew</option><option value="addon">addon</option><option value="service">service (logistik)</option></select>
+                <select name="item_id" aria-label="Item inventori" class="{{ $cls }} col-span-2 bg-white">
+                    <option value="">Hubungkan ke inventori</option>
+                    <optgroup label="Produk">
+                        @foreach ($products as $product)<option value="product:{{ $product->id }}">{{ $product->name }}</option>@endforeach
+                    </optgroup>
+                    <optgroup label="Paket">
+                        @foreach ($packages as $package)<option value="package:{{ $package->id }}">{{ $package->name }}</option>@endforeach
+                    </optgroup>
+                </select>
                 <input name="qty" type="number" value="1" min="1" class="{{ $cls }}" title="Qty">
                 <input name="days" type="number" value="1" min="1" class="{{ $cls }}" title="Hari">
                 <input name="rate" placeholder="Rate (Rp)" required class="{{ $cls }} col-span-2 sm:col-span-1">
@@ -131,11 +176,22 @@
     </div>
 
     <aside class="space-y-5">
+        @if ($booking->status === 'completed' && $booking->access_token)
+            <section class="bg-white border border-line rounded-2xl p-5">
+                <h2 class="font-semibold">Link feedback customer</h2>
+                <input type="url" readonly aria-label="Link feedback customer" value="{{ $booking->summary_url }}"
+                       class="{{ $cls }} mt-2" onclick="this.select()">
+            </section>
+        @endif
         <div class="bg-white border border-line rounded-2xl p-5 text-[13px] space-y-1.5">
             <h2 class="font-semibold mb-2">Ringkasan</h2>
             <div class="flex justify-between"><span class="text-muted">Subtotal</span><span>{{ rupiah($booking->subtotal) }}</span></div>
             <div class="flex justify-between"><span class="text-muted">Logistik</span><span>{{ rupiah($booking->logistics_fee) }}</span></div>
             <div class="flex justify-between"><span class="text-muted">Diskon</span><span>- {{ rupiah($booking->discount) }}</span></div>
+            @if ($booking->negotiated_total !== null)
+                <div class="flex justify-between"><span class="text-muted">Estimasi awal</span><span>{{ rupiah($booking->initial_estimate) }}</span></div>
+                <div class="flex justify-between"><span class="text-muted">Harga kesepakatan</span><span>{{ rupiah($booking->negotiated_total) }}</span></div>
+            @endif
             <div class="flex justify-between font-bold text-[15px] border-t border-line pt-2"><span>Total</span><span>{{ rupiah($booking->total) }}</span></div>
             <div class="flex justify-between"><span class="text-muted">Dibayar</span><span class="text-emerald-600 font-semibold">{{ rupiah($booking->amount_paid) }} ({{ $booking->paid_percent }}%)</span></div>
             <div class="flex justify-between"><span class="text-muted">Sisa</span><b>{{ $booking->remaining ? rupiah($booking->remaining) : 'Lunas' }}</b></div>
@@ -148,6 +204,20 @@
 
         <div class="bg-white border border-line rounded-2xl p-5">
             <h2 class="font-semibold">Pembayaran</h2>
+            @if ($booking->invoice_issued_at)
+                <p class="text-sm text-muted mt-1">
+                    {{ $booking->invoice_emailed_at ? 'Invoice dikirim ke '.$booking->customer_email : ($booking->customer_email ? 'Invoice belum terkirim lewat email.' : 'Invoice tersedia. Email customer belum diisi.') }}
+                </p>
+            @endif
+            @can('bookings.negotiate')
+                @if ($booking->invoice_issued_at && ! $booking->invoice_emailed_at)
+                    <form method="POST" action="{{ route('admin.bookings.invoice-email', $booking) }}" class="flex gap-2 mt-2">
+                        @csrf @method('PATCH')
+                        <input type="email" name="customer_email" required value="{{ old('customer_email', $booking->customer_email) }}" aria-label="Email customer untuk invoice" placeholder="Email customer" class="{{ $cls }} min-w-0 flex-1">
+                        <button class="rounded-full bg-soft px-3 text-xs font-semibold">Simpan & kirim</button>
+                    </form>
+                @endif
+            @endcan
             <div class="divide-y divide-line mt-2">
                 @forelse ($booking->payments as $p)
                     <div class="py-3 text-[12.5px]">
@@ -172,9 +242,16 @@
                     <div class="text-muted text-sm py-3">Belum ada pembayaran.</div>
                 @endforelse
             </div>
-            @if ($booking->remaining > 0 && $canFinance)
+            @if ($booking->status === 'cancelled')
+                <p class="mt-3 text-sm text-muted">Booking dibatalkan.</p>
+            @elseif ($booking->negotiation_status === 'pending')
+                <p class="mt-3 text-sm text-muted">Pembayaran bisa dicatat setelah owner ACC harga.</p>
+            @elseif ($booking->status === 'pending' && $booking->negotiation_status === 'approved' && ! $booking->hold_expires_at?->isFuture())
+                <p class="mt-3 text-sm text-muted">Penahanan stok sudah habis. Owner perlu cek dan ACC ulang.</p>
+            @elseif ($booking->remaining > 0 && $canFinance)
                 <form action="{{ route('admin.bookings.payments.store', $booking) }}" method="POST" class="grid grid-cols-2 gap-2 mt-3 border-t border-line pt-3">@csrf
                     <div class="col-span-2 text-[11px] text-muted">Catat pembayaran manual (langsung terverifikasi) · maks. <b>{{ rupiah($booking->remaining) }}</b></div>
+                    <input type="hidden" name="submission_key" value="{{ old('submission_key', (string) \Illuminate\Support\Str::uuid()) }}">
                     <input name="amount" value="{{ old('amount') }}" placeholder="Nominal (Rp)" required inputmode="numeric" class="{{ $cls }}"
                            oninput="this.value = this.value.replace(/\D/g, '').replace(/\B(?=(\d{3})+(?!\d))/g, '.')">
                     <input name="method" value="{{ old('method') }}" placeholder="Metode (Cash / Transfer)" required class="{{ $cls }}">
