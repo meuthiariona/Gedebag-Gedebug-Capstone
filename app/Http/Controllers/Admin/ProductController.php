@@ -3,7 +3,9 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Models\Category;
+use App\Models\PackageItem;
 use App\Models\Product;
+use App\Services\Availability;
 use Illuminate\Database\Eloquent\Model;
 
 class ProductController extends ResourceController
@@ -21,6 +23,17 @@ class ProductController extends ResourceController
     protected array $with = ['category'];
 
     protected array $searchable = ['name', 'subtitle'];
+
+    public function destroy(int $id)
+    {
+        return Availability::transaction(function () use ($id) {
+            if (PackageItem::where('product_id', $id)->exists()) {
+                return back()->withErrors(['product' => 'Produk masih terhubung ke paket. Lepaskan relasinya atau nonaktifkan produk.']);
+            }
+
+            return parent::destroy($id);
+        });
+    }
 
     protected function columns(): array
     {

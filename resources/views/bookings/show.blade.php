@@ -27,11 +27,19 @@
             </div>
         </div>
         <div class="lg:ml-auto flex flex-wrap gap-2">
+            @if ($booking->invoice_available)
             <a href="{{ route('bookings.invoice', $booking) }}" class="h-10 px-4 rounded-full bg-soft text-[12px] font-semibold flex items-center gap-2"><i data-lucide="receipt" class="w-4 h-4"></i> View Invoice</a>
+            @endif
+            @if ($booking->invoice_available)
             <a href="{{ route('bookings.invoice', [$booking, 'print' => 1]) }}" class="h-10 px-4 rounded-full bg-soft text-[12px] font-semibold flex items-center gap-2"><i data-lucide="download" class="w-4 h-4"></i> Download PDF</a>
+            @endif
             <a href="{{ $wa }}" target="_blank" class="h-10 px-4 rounded-full bg-ink text-white text-[12px] font-bold flex items-center gap-2"><i data-lucide="headset" class="w-4 h-4"></i> Speak with Dispatch Lead</a>
         </div>
     </div>
+
+    @if ($booking->status === 'completed' && ! auth()->user()?->isAdmin())
+        @include('bookings.feedback')
+    @endif
 
     {{-- Pipeline --}}
     <div class="border border-line rounded-2xl p-6 mt-5">
@@ -157,7 +165,10 @@
                     <div class="flex justify-between"><span class="text-muted">Rental & Talent Subtotal</span><span>{{ rupiah($booking->subtotal) }}</span></div>
                     <div class="flex justify-between"><span class="text-muted">Logistics & Delivery Fee</span><span>{{ rupiah($booking->logistics_fee) }}</span></div>
                     @if ($booking->discount)<div class="flex justify-between"><span class="text-muted">Discount</span><span class="text-red-600">- {{ rupiah($booking->discount) }}</span></div>@endif
-                    <div class="flex justify-between font-semibold text-[13px] pt-1"><span>Total Booking Amount</span><span>{{ rupiah($booking->total) }}</span></div>
+                    @if ($booking->negotiation_adjustment)
+                        <div class="flex justify-between"><span class="text-muted">Penyesuaian hasil nego</span><span>{{ $booking->negotiation_adjustment < 0 ? '− ' : '+ ' }}{{ rupiah(abs($booking->negotiation_adjustment)) }}</span></div>
+                    @endif
+                    <div class="flex justify-between font-semibold text-[13px] pt-1"><span>{{ $booking->negotiated_total !== null ? 'Harga kesepakatan' : 'Total Booking Amount' }}</span><span>{{ rupiah($booking->total) }}</span></div>
                 </div>
                 <div class="bg-soft rounded-xl p-3.5 mt-4 space-y-3">
                     <div class="flex justify-between items-start">
@@ -176,9 +187,11 @@
                 @endforeach
                 @if ($booking->remaining > 0 && $booking->status !== 'cancelled')
                     <a href="{{ route('orders.whatsapp', $booking->access_token) }}" target="_blank" rel="noopener" class="mt-4 w-full h-10 rounded-full bg-emerald-600 text-white text-[12px] font-bold flex items-center justify-center gap-2">
-                        <i data-lucide="message-circle" class="w-4 h-4"></i> {{ $booking->payment_status === 'unpaid' ? 'Negosiasi & Bayar via WhatsApp' : 'Pelunasan via WhatsApp ('.rupiah($booking->remaining).')' }}</a>
+                        <i data-lucide="message-circle" class="w-4 h-4"></i> {{ $booking->negotiation_status === 'approved' && $booking->status === 'pending' ? 'Bayar via WhatsApp ('.rupiah($booking->next_due).')' : ($booking->payment_status === 'unpaid' ? 'Negosiasi & Bayar via WhatsApp' : 'Pelunasan via WhatsApp ('.rupiah($booking->remaining).')') }}</a>
                 @endif
-                <a href="{{ route('bookings.invoice', $booking) }}" class="mt-2 block text-center text-[11.5px] font-semibold hover:underline">View Full Tax Invoice #{{ $booking->invoice_no }}</a>
+                @if ($booking->invoice_available)
+                <a href="{{ route('bookings.invoice', $booking) }}" class="mt-2 block text-center text-[11.5px] font-semibold hover:underline">Buka Invoice #{{ $booking->invoice_no }}</a>
+                @endif
                 <div class="flex justify-between text-[10px] text-muted mt-4"><span class="flex items-center gap-1"><i data-lucide="lock" class="w-3 h-3"></i> 256-Bit Escrow</span><span class="flex items-center gap-1"><i data-lucide="shield-check" class="w-3 h-3"></i> Official NPWP Validated</span></div>
             </div>
 

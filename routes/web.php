@@ -12,6 +12,7 @@ use Illuminate\Support\Facades\Route;
 // ---------- Publik ----------
 Route::get('/', [ShopController::class, 'home'])->name('home');
 Route::get('/products', [ShopController::class, 'products'])->name('products');
+Route::get('/products/{product}/availability', [ShopController::class, 'availability'])->name('products.availability');
 Route::get('/packages', [ShopController::class, 'packages'])->name('packages');
 Route::get('/packages/{slug}', [ShopController::class, 'package'])->name('packages.show');
 
@@ -30,7 +31,11 @@ Route::get('/order/{token}/whatsapp', [BookingController::class, 'whatsapp'])->n
 // My Bookings: akun yang login + pesanan tamu yang tersimpan di browser ini
 Route::get('/my-bookings', [BookingController::class, 'index'])->name('bookings.index');
 Route::get('/my-bookings/{booking:code}', [BookingController::class, 'show'])->name('bookings.show');
+Route::post('/my-bookings/{booking:code}/feedback', [BookingController::class, 'storeFeedback'])
+    ->middleware('throttle:10,1')->name('bookings.feedback.store');
 Route::get('/my-bookings/{booking:code}/invoice', [BookingController::class, 'invoice'])->name('bookings.invoice');
+Route::get('/invoices/{booking:code}', [BookingController::class, 'emailedInvoice'])
+    ->middleware('signed')->name('bookings.emailed-invoice');
 
 // ---------- Auth ----------
 Route::middleware('guest')->group(function () {
@@ -87,13 +92,24 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin', 'staff.sess
         Route::resource('hero-slides', Admin\HeroSlideController::class)->except('show');
 
         Route::post('packages/{package}/items', [Admin\PackageController::class, 'storeItem'])->name('packages.items.store');
+        Route::patch('package-items/{item}/inventory', [Admin\PackageController::class, 'updateInventory'])->name('packages.items.inventory');
         Route::delete('package-items/{item}', [Admin\PackageController::class, 'destroyItem'])->name('packages.items.destroy');
         Route::post('packages/{package}/addons', [Admin\PackageController::class, 'storeAddon'])->name('packages.addons.store');
         Route::delete('package-addons/{addon}', [Admin\PackageController::class, 'destroyAddon'])->name('packages.addons.destroy');
     });
 
+    Route::middleware('permission:bookings.manage')->group(function () {
+        Route::get('bookings/create', [Admin\BookingController::class, 'create'])->name('bookings.create');
+        Route::post('bookings', [Admin\BookingController::class, 'store'])->name('bookings.store');
+    });
+    Route::post('bookings/{booking}/negotiate', [Admin\BookingController::class, 'negotiate'])
+        ->middleware('permission:bookings.negotiate')->name('bookings.negotiate');
+    Route::patch('bookings/{booking}/invoice-email', [Admin\BookingController::class, 'updateInvoiceEmail'])
+        ->middleware('permission:bookings.negotiate')->name('bookings.invoice-email');
+
     // Booking: semua staf boleh melihat
     Route::middleware('permission:bookings.view')->group(function () {
+        Route::get('feedback', [Admin\BookingFeedbackController::class, 'index'])->name('feedback.index');
         Route::get('bookings', [Admin\BookingController::class, 'index'])->name('bookings.index');
         // Kalender booking + event Google Calendar (harus sebelum bookings/{booking})
         Route::get('bookings/calendar', [Admin\CalendarController::class, 'index'])->name('bookings.calendar');
@@ -113,6 +129,7 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin', 'staff.sess
 
     // Keuangan: Owner & Admin Keuangan
     Route::middleware('permission:finance.manage')->group(function () {
+        Route::get('cash-receipts', [Admin\CashReceiptController::class, 'index'])->name('cash-receipts.index');
         Route::post('bookings/{booking}/payments', [Admin\BookingController::class, 'storePayment'])->name('bookings.payments.store');
         Route::post('payments/{payment}/verify', [Admin\BookingController::class, 'verifyPayment'])->name('payments.verify');
         Route::delete('payments/{payment}', [Admin\BookingController::class, 'destroyPayment'])->name('payments.destroy');

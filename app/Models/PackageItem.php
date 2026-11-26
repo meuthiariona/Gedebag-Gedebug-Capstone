@@ -12,6 +12,11 @@ class PackageItem extends Model
 
     public const TYPES = ['hardware' => 'Included Hardware', 'talent' => 'Talent & Crew', 'service' => 'Services & Logistics'];
 
+    public function product()
+    {
+        return $this->belongsTo(Product::class);
+    }
+
     public function package()
     {
         return $this->belongsTo(Package::class);

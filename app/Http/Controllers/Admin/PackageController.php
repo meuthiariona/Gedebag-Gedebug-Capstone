@@ -6,6 +6,7 @@ use App\Models\Package;
 use App\Models\PackageAddon;
 use App\Models\PackageCategory;
 use App\Models\PackageItem;
+use App\Services\Availability;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\Request;
 
@@ -74,18 +75,27 @@ class PackageController extends ResourceController
         $data = $request->validate([
             'type' => ['required', 'in:'.implode(',', array_keys(PackageItem::TYPES))],
             'qty' => ['required', 'integer', 'min:1'],
+            'product_id' => ['nullable', 'integer', 'exists:products,id'],
             'name' => ['required', 'max:150'],
             'subtitle' => ['nullable', 'max:200'],
             'tag' => ['nullable', 'max:60'],
         ]);
-        $package->items()->create($data + ['sort_order' => $package->items()->count()]);
+        Availability::transaction(fn () => $package->items()->create($data + ['sort_order' => $package->items()->count()]));
 
         return back()->with('success', 'Item paket ditambahkan.');
     }
 
+    public function updateInventory(Request $request, PackageItem $item)
+    {
+        $data = $request->validate(['product_id' => ['present', 'nullable', 'integer', 'exists:products,id']]);
+        Availability::transaction(fn () => $item->update($data));
+
+        return back()->with('success', 'Link inventori item paket disimpan.');
+    }
+
     public function destroyItem(PackageItem $item)
     {
-        $item->delete();
+        Availability::transaction(fn () => $item->delete());
 
         return back()->with('success', 'Item paket dihapus.');
     }

@@ -4,6 +4,9 @@
 @section('content')
 <form method="GET" class="flex flex-wrap items-center gap-3 mb-4">
     @include('admin.bookings._tabs')
+    @can('bookings.manage')
+        <a href="{{ route('admin.bookings.create') }}" class="rounded-full bg-ink text-white px-4 py-2 text-sm font-semibold">+ Booking manual</a>
+    @endcan
     <div class="flex items-center gap-2 bg-white border border-line rounded-full px-4 h-10 w-full sm:w-72">
         <i data-lucide="search" class="w-4 h-4 text-muted"></i>
         <input name="q" value="{{ $search }}" placeholder="Kode, event, customer..." class="text-sm outline-none w-full">

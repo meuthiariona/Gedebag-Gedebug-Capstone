@@ -64,17 +64,51 @@ class BookingController extends Controller
     public function show(Booking $booking)
     {
         $this->authorizeBooking($booking);
-        $booking->load(['items', 'logs', 'payments']);
+        $booking->load(['items', 'logs', 'payments', 'feedback']);
 
         return view('bookings.show', compact('booking'));
+    }
+
+    public function storeFeedback(Request $request, Booking $booking)
+    {
+        $this->authorizeBooking($booking);
+        abort_if($request->user()?->isAdmin(), 403);
+        abort_unless($booking->status === 'completed', 403);
+
+        $data = $request->validate([
+            'rating' => ['required', 'integer', 'between:1,5'],
+            'comment' => ['nullable', 'string', 'max:1000'],
+        ]);
+        $feedback = $booking->feedback()->firstOrCreate([], $data);
+
+        return redirect()->route('bookings.show', $booking)->with('success', $feedback->wasRecentlyCreated
+            ? 'Terima kasih. Feedback sudah dikirim.'
+            : 'Feedback untuk booking ini sudah pernah dikirim.');
     }
 
     public function invoice(Booking $booking)
     {
         $this->authorizeBooking($booking);
+        abort_unless($booking->invoice_available, 404);
+
+        return $this->renderInvoice($booking);
+    }
+
+    public function emailedInvoice(Request $request, Booking $booking)
+    {
+        abort_unless($booking->invoice_issued_at && $booking->access_token
+            && hash_equals($booking->access_token, $request->string('token')->toString()), 404);
+
+        return $this->renderInvoice($booking);
+    }
+
+    private function renderInvoice(Booking $booking)
+    {
         $booking->load(['items', 'payments', 'user']);
 
-        return view('bookings.invoice', compact('booking'));
+        return response()->view('bookings.invoice', compact('booking'))
+            ->header('Cache-Control', 'private, no-store')
+            ->header('Referrer-Policy', 'no-referrer');
     }
 
     /**
@@ -87,7 +121,7 @@ class BookingController extends Controller
         remember_guest_order($booking->id); // link ini membuka akses booking di browser ini
 
         // Sudah chat admin untuk nego → tampilkan halaman detail booking
-        if ($booking->wa_contacted_at) {
+        if ($booking->wa_contacted_at || $booking->status === 'completed') {
             return redirect()->route('bookings.show', $booking);
         }
 
@@ -100,7 +134,8 @@ class BookingController extends Controller
         $booking = Booking::where('access_token', $token)->firstOrFail();
         remember_guest_order($booking->id);
 
-        if (! $booking->wa_contacted_at) {
+        if (! $booking->wa_contacted_at && in_array($booking->negotiation_status, [null, 'pending'], true)
+            && $booking->status === 'pending') {
             $booking->update([
                 'wa_contacted_at' => now(),
                 'phase_title' => 'Negosiasi harga via WhatsApp',

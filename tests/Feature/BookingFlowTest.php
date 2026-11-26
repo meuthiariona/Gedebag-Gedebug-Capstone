@@ -127,7 +127,12 @@ class BookingFlowTest extends TestCase
         // Setelah deal di WA, admin mencatat diskon & pembayaran → booking terkonfirmasi
         $admin = User::where('role', 'owner')->first();
         $this->actingAs($admin)->get("/admin/bookings/{$booking->id}")->assertOk()->assertSee('Budi Tamu');
-        $this->actingAs($admin)->post("/admin/bookings/{$booking->id}/payments", ['amount' => (string) $booking->dp_amount, 'method' => 'Transfer'])->assertRedirect();
+        $this->post("/admin/bookings/{$booking->id}/payments", ['amount' => (string) $booking->dp_amount, 'method' => 'Transfer'])
+            ->assertSessionHasErrors('amount');
+        $this->post("/admin/bookings/{$booking->id}/negotiate", ['decision' => 'approve', 'negotiated_total' => $expected])
+            ->assertSessionHasNoErrors();
+        $this->post("/admin/bookings/{$booking->id}/payments", ['amount' => (string) $booking->dp_amount, 'method' => 'Transfer'])
+            ->assertSessionHasNoErrors();
 
         $booking->refresh();
         $this->assertSame('confirmed', $booking->status);

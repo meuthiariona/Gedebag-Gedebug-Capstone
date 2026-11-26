@@ -60,15 +60,15 @@ class Cart
      * Tanpa tanggal (halaman keranjang): item harian dihitung 1 hari dan ketersediaan = total stok.
      * Dengan tanggal (checkout): harga mengikuti jumlah hari & stok dicek terhadap booking lain di rentang itu.
      */
-    public static function lines(?Carbon $start = null, ?Carbon $end = null): array
+    public static function lines(?Carbon $start = null, ?Carbon $end = null, ?array $rows = null): array
     {
         $dated = $start && $end;
         $days = $dated ? (int) $start->diffInDays($end) + 1 : 1;
         $lines = [];
 
-        foreach (self::raw() as $key => $row) {
+        foreach (($rows ?? self::raw()) as $key => $row) {
             if ($row['type'] === 'product') {
-                $model = Product::with('category')->find($row['id']);
+                $model = Product::active()->with('category')->find($row['id']);
                 if (! $model) {
                     continue;
                 }
@@ -81,7 +81,7 @@ class Cart
                     'available' => $dated ? Availability::product($model, $start, $end) : $model->stock,
                 ];
             } else {
-                $model = Package::find($row['id']);
+                $model = Package::active()->find($row['id']);
                 if (! $model) {
                     continue;
                 }

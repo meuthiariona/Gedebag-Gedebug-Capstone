@@ -21,6 +21,7 @@ return [
         'admin.access' => 'Masuk ke panel admin & melihat dashboard',
         'bookings.view' => 'Melihat daftar & detail booking',
         'bookings.manage' => 'Mengubah status, pipeline, logistik & item booking',
+        'bookings.negotiate' => 'ACC atau tolak harga hasil negosiasi',
         'bookings.delete' => 'Menghapus booking secara permanen',
         'finance.manage' => 'Mencatat/verifikasi/hapus pembayaran, mengatur diskon & DP',
         'catalog.manage' => 'Mengelola produk, talent, paket, kategori & banner',

@@ -5,7 +5,7 @@
 <div class="max-w-[1180px] mx-auto px-4 sm:px-6 pt-10">
     <div class="eyebrow flex items-center gap-2"><span class="w-1.5 h-1.5 rounded-full bg-ink"></span> Equipment & Talent Catalog</div>
     <h1 class="text-3xl font-semibold tracking-tight mt-2">{{ $search ? 'Hasil pencarian "'.$search.'"' : 'Products' }}</h1>
-    <p class="text-[13px] text-muted mt-1">Harga per unit. Ketersediaan dicek sesuai tanggal acara saat checkout.</p>
+    <p class="text-[13px] text-muted mt-1">Lihat kalender setiap item untuk cek ketersediaan sesuai tanggal acara.</p>
 
     <div class="flex gap-2 overflow-x-auto scrollbar-none mt-6 pb-1">
         <a href="{{ route('products', array_filter(['q' => $search])) }}" class="shrink-0 h-9 px-4 rounded-full border text-[12px] font-semibold flex items-center gap-2 {{ ! $active ? 'bg-ink text-white border-ink' : 'border-line hover:bg-soft' }}">

@@ -59,3 +59,12 @@ Artisan::command('calendar:sync {--all : kirim ulang semua booking aktif, bukan 
 
 // Jaring pengaman: sinkron otomatis saat simpan booking bisa gagal (internet putus dsb.), jadi dicoba ulang tiap 10 menit.
 Illuminate\Support\Facades\Schedule::command('calendar:sync')->everyTenMinutes()->withoutOverlapping();
+
+
+Artisan::command('invoices:send-pending', function (App\Services\BookingInvoice $invoices) {
+    App\Models\Booking::query()->whereNotNull('invoice_issued_at')->whereNull('invoice_emailed_at')
+        ->whereNotNull('customer_email')->whereIn('status', ['confirmed', 'completed'])
+        ->eachById(fn (App\Models\Booking $booking) => $invoices->send($booking->id));
+});
+
+Illuminate\Support\Facades\Schedule::command('invoices:send-pending')->everyTenMinutes()->withoutOverlapping();
